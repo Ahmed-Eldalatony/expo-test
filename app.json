@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ahmeddalton.expotest"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,7 +34,17 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],[
+        "expo-font",
+        {
+        "fonts": ["node_modules/@expo-google-fonts/readex-pro/ReadexPro_400Regular.ttf", 
+            "node_modules/@expo-google-fonts/readex-pro/ReadexPro_500Medium.ttf",
+            "node_modules/@expo-google-fonts/readex-pro/ReadexPro_600SemiBold.ttf",
+            "node_modules/@expo-google-fonts/readex-pro/ReadexPro_700Bold.ttf"
+          ]
+
+        }
+     ]
     ],
     "experiments": {
       "typedRoutes": true
