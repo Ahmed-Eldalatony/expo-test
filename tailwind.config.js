@@ -1,25 +1,21 @@
 import { platformSelect } from "nativewind/theme";
 
 /** @type {import('tailwindcss').Config} */
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./app/**/*.{js,jsx,ts,tsx}', './components/**/*.{js,jsx,ts,tsx}'],
+  darkMode: 'class', // Enable dark mode using class strategy
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
       colors: {
+        'primary-200': '#A69D7F',
+        'primary-300': '#EEDCAE',
+        'primary-800': '#FFC73E',
         'primary-800': '#895105',
-        'custom-black': '#000000',
-        'custom-blue': '#007AFF',
-        'custom-green': '#34C759',
-        'custom-red': '#FF3B30',
-        'custom-yellow': '#FFCC00',
-        'custom-gray': '#8E8E93',
-        'custom-light-gray': '#F2F2F7',
-        'custom-dark-gray': '#1C1C24',
-        'custom-purple': '#5856D6',
-        'custom-orange': '#FF9500',
-        'custom-pink': '#FF2D55',
-        'custom-brown': '#A2845E',
+        // 'primary-900': '#4C3C25',
+        'secondary-500': '#1F9C5B',
+        'white': "#FFF9E5"
       },
       fontFamily: {
         "readexpro-regular": ["ReadexPro_400Regular"],

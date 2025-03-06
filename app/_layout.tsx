@@ -38,11 +38,12 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      {!hasCompletedOnboarding() && <Redirect href="/slide1" />}
+      <>
+      {/* {!hasCompletedOnboarding() && <Redirect href="/slide1" />} */}
       <Stack>
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+      {/* <StatusBar style="auto" /> */}
+    </>
   );
 }
+
