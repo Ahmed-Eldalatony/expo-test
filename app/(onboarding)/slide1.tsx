@@ -3,6 +3,7 @@ import { View, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useRouter } from 'expo-router';
+import { Text } from 'react-native';
 
 import { ThemedText } from '../../components/ThemedText';
 export default function OnboardingSlide() {
@@ -11,7 +12,7 @@ export default function OnboardingSlide() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 gap-8 items-center justify-center bg-white dark:bg-primary-900">
+    <View className="flex-1 gap-8  items-center justify-center    ">
       <Image
         source={require('../../assets/images/slide image.png')}
         className="w-full h-60 mb-8"
@@ -19,9 +20,9 @@ export default function OnboardingSlide() {
       />
 
       {/* Arabic Title */}
-      <ThemedText className="text-4xl leading-snug font-readexpro-semibold text-primary-800 text-center">
+      <Text className="text-4xl leading-snug font-readexpro-semibold text-primary-800 text-center">
         {t('slide1.title')}
-      </ThemedText>
+      </Text>
 
       {/* Gradient Button */}
       <TouchableOpacity onPress={() => router.push('/slide2')}>

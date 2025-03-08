@@ -2,10 +2,14 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "../../hooks/useTranslation";
+import React from "react";
+import { View, Text } from "react-native";
+import { useTranslation } from "../../hooks/useTranslation";
 import { useRouter } from "expo-router";
 
+import { OnboardingButton } from "../../components/OnboardingButton";
+
 export default function OnboardingSlide() {
-  const { width } = Dimensions.get("window");
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -46,24 +50,7 @@ export default function OnboardingSlide() {
         </View>
       </View>
 
-      <TouchableOpacity onPress={() => router.push("/slide4")}>
-        <LinearGradient
-          colors={["#FFD27D", "#4BE1A0"]} // Example gradient colors
-          style={{
-            width: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          className="font-readexpro-medium py-2 px-4 rounded-lg"
-        >
-          <Text
-            className="font-readexpro-medium text-white text-2xl font-bold"
-            style={{ writingDirection: "rtl" }}
-          >
-            {t("next")}
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      <OnboardingButton title={t("next")} onPress={() => router.push("/slide4")} />
     </View>
   );
 }
