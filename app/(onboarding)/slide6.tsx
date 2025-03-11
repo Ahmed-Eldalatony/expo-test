@@ -1,50 +1,41 @@
-import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useFonts, ReadexPro_400Regular, ReadexPro_500Medium, ReadexPro_600SemiBold, ReadexPro_700Bold } from '@expo-google-fonts/readex-pro';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import React from "react";
+import { View, Text, Image } from "react-native";
+import { useTranslation } from "../../hooks/useTranslation";
+import { useRouter } from "expo-router";
+import { OnboardingButton } from "../../components/OnboardingButton";
 
-export default function Onboarding1() {
-  const [loaded] = useFonts({
-    ReadexPro_400Regular,
-    ReadexPro_500Medium,
-    ReadexPro_600SemiBold,
-    ReadexPro_700Bold
-  });
-
-  useEffect(() => {
-    SplashScreen.preventAutoHideAsync();
-
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
+export default function OnboardingSlide() {
+  const { t } = useTranslation();
   const router = useRouter();
 
-  const handleNext = () => {
-    // Navigate to the second page of the tour
-    router.push('/slide7');
-  };
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to the App!</Text>
-      <Text style={styles.description}>
-        This is the first page of our 10-page tour.
+    <View className="flex-1 bg-white px-4 gap-12 items-center justify-center">
+      <Text className="text-3xl mb-4 font-readexpro-semibold text-primary-800 text-center">
+        {t("slide6.title")}
       </Text>
-      <Button title="Next" onPress={handleNext} />
+      <View>
+        <View className="bg-gray-100/70 p-4 text-center rounded-lg max-w-2xl ">
+          <Text className="text-lg mb-2 text-center font-readexpro-semibold text-primary-900">
+            {t("slide6.hadeeth1")[0]}
+          </Text>
+          <View className="flex-row leading-relaxed rtl flex-end ml-auto">
+            <Text className=" text-2xl leading-relaxed font-amiri-bold text-secondary-500">
+              "{t("slide6.hadeeth1")[1]}"{" "}
+            </Text>
+          </View>
+          <View className="bg-gray-100/70 p-4  text-center rounded-lg ">
+            <Text className="text-lg mb-2 text-center font-readexpro-semibold text-primary-900">
+              {t("slide6.hadeeth2")[0]}
+            </Text>
+            <View className="flex-row leading-relaxed rtl flex-end ml-auto">
+              <Text className=" text-2xl leading-relaxed font-amiri-bold text-secondary-500">
+                "{t("slide6.hadeeth2")[1]}"{" "}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <OnboardingButton title={t("next")} onPress={() => router.push("/slide7")} />
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  title: { fontFamily: 'ReadexPro', fontSize: 24, marginBottom: 10 },
-  description: { fontFamily: 'ReadexPro', fontSize: 16, marginBottom: 20 },
-});
