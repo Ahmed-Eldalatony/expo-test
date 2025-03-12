@@ -35,7 +35,20 @@ export default function OnboardingSlide() {
         className="-mt-2"
         style={{ width: 25, height: 56 }}
       />
-      <ChecklistItem demo={true} t={t} checkState={"completed"} />
+      <ChecklistItem
+        demo={true}
+        t={t}
+        checkState={"completed"}
+        subtasks={[
+          {
+            type: "choose",
+            options: [
+              { label: "جماعة في مسجد", triggerState: "completed" },
+              { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
+            ],
+          },
+        ]}
+      />
 
       <OnboardingButton style={{ marginTop: 30 }} title={t("next")} onPress={() => router.push("/slide5")} />
     </View>

@@ -1,28 +1,12 @@
-
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { ChecklistMainTask } from "./ChecklistMainTask";
+import { ChecklistSubtasks } from "./ChecklistSubtasks";
 export type ChecklistState = "notcompleted" | "partiallycompleted" | "completed";
-// ai!, i want to change how subtasks work for the checklist component to the following:// {
-// type:"choose",
-//     options: [
-//       { label: "جماعة في مسجد", triggerState: "completed" },
-//       { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
-//     ],
-// type:"counter",
-//   options:[
-//     {label:"2 ركعات",triggerState:2},
-//     {label:"4 ركعات",triggerState:4},
-//     {label:"6 ركعات",triggerState:6},
-//   ]
-// }
+export type SubtaskType = "choose" | "counter";
 
-// Type for each subtask
-export interface Subtask {
-  label: string;
-  triggerState: ChecklistState;
-}
-
+// Type for each subtask option
 // Props for the ChecklistItem component
 export interface ChecklistItemProps {
   t: (key: string) => string;
@@ -33,6 +17,17 @@ export interface ChecklistItemProps {
   defaultSelectedSubtaskIndex?: number;
 }
 
+// Type for each subtask
+export interface Subtask {
+  type: SubtaskType;
+  options: SubtaskOption[];
+  defaultSelectedSubtaskIndex?: number;
+}
+
+export interface SubtaskOption {
+  label: string;
+  triggerState: string | number;
+}
 
 const imageMap: Record<ChecklistState, any> = {
   notcompleted: require("../../assets/images/unchecked.svg"),
@@ -52,82 +47,6 @@ const getGradientLocations = (checked: ChecklistState): number[] => {
   }
 };
 
-interface ChecklistMainTaskProps {
-  t: (key: string) => string;
-  demo: boolean;
-  handleToggle: () => void;
-  checked: ChecklistState;
-  imageMap: Record<ChecklistState, any>;
-  isSubtasksCollapsed: boolean;
-  toggleCollapse: () => void;
-  hasSubtasks: boolean;
-}
-
-export const ChecklistMainTask: React.FC<ChecklistMainTaskProps> = ({
-  t,
-  demo,
-  handleToggle,
-  checked,
-  imageMap,
-  isSubtasksCollapsed,
-  toggleCollapse,
-  hasSubtasks,
-}) => {
-  return (
-    <TouchableOpacity
-      onPress={() => !demo && handleToggle()}
-      className={`flex-row-reverse  w-full justify-between max-w-xl rounded-md p-2 bg-white border border-gray-300 ${demo ? "bg-primary-200" : ""
-        }`}
-    >
-      {hasSubtasks && (
-        <TouchableOpacity
-          onPress={toggleCollapse}
-          className="px-2 z-30 absolute right-0 top-2"
-        >
-          <Text className="text-gray-700 text-xl">
-            {isSubtasksCollapsed ? "▶" : "▼"}
-          </Text>
-        </TouchableOpacity>
-      )}
-      <Text className={`text-gray-800 !text-lg  ${hasSubtasks?"ps-6":""}`}>{t("slide4.task")}</Text>
-      <Image source={imageMap[checked]} className="w-8 h-8 my-auto" />
-    </TouchableOpacity>
-  );
-};
-
-interface ChecklistSubtasksProps {
-  subtasks: Subtask[];
-  selectedSubtaskIndex: number;
-  demo: boolean;
-  handleSubtaskPress: (newState: ChecklistState, index: number) => void;
-}
-
-const ChecklistSubtasks: React.FC<ChecklistSubtasksProps> = ({
-  subtasks,
-  selectedSubtaskIndex,
-  demo,
-  handleSubtaskPress,
-}) => {
-  return (
-    <View className="ms-5 pr-2">
-      <View className="absolute top-1 bottom-0 right-3 w-[2px] bg-gray-400" />
-      <View className="mt-2 border right-4 w-full border-gray-500 rounded-md p-1 gap-2 flex-row justify-between">
-        {subtasks.map((subtask, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => !demo && handleSubtaskPress(subtask.triggerState, index)}
-            className={`p-1 w-[100%]  flex-1  rounded-[4px] ${selectedSubtaskIndex === index ? "bg-primary-400" : ""}`}
-          >
-            <Text className={`text-gray-600 ${selectedSubtaskIndex === index ? "text-white" : ""}`}>
-              {subtask.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-};
-
 export const ChecklistItem: React.FC<ChecklistItemProps> = ({
   t,
   checkState,
@@ -135,29 +54,49 @@ export const ChecklistItem: React.FC<ChecklistItemProps> = ({
   subtasks,
   defaultSelectedSubtaskIndex,
 }) => {
+  const [sunnahRakat, setSunnahRakat] = useState<number>(0); // NEW state
   const initialState: ChecklistState =
-    defaultSelectedSubtaskIndex !== undefined && subtasks && subtasks[defaultSelectedSubtaskIndex]
-      ? subtasks[defaultSelectedSubtaskIndex].triggerState
+    defaultSelectedSubtaskIndex !== undefined && subtasks
+      ? mapTriggerStateToChecklistState(subtasks, defaultSelectedSubtaskIndex)
       : checkState;
 
   const [checked, setChecked] = useState<ChecklistState>(initialState);
-  const [selectedSubtaskIndex, setSelectedSubtaskIndex] = useState<number>(
-    defaultSelectedSubtaskIndex !== undefined
-      ? defaultSelectedSubtaskIndex
-      : subtasks
-        ? subtasks.findIndex((sub) => sub.triggerState === checkState)
-        : -1
+  const [selectedOptionIndices, setSelectedOptionIndices] = useState<(number | null)[]>(
+    subtasks
+      ? subtasks.map((subtask) => {
+        if (subtask.type === "choose" && subtask.defaultSelectedSubtaskIndex !== undefined) {
+          return subtask.defaultSelectedSubtaskIndex;
+        } else {
+          return null;
+        }
+      })
+      : []
   );
   const [isSubtasksCollapsed, setIsSubtasksCollapsed] = useState<boolean>(false);
 
   // Sync with checkState changes if defaultSelectedSubtaskIndex is not provided.
   useEffect(() => {
-    if (subtasks && defaultSelectedSubtaskIndex === undefined) {
-      const index = subtasks.findIndex((sub) => sub.triggerState === checkState);
-      setSelectedSubtaskIndex(index);
-      setChecked(index >= 0 ? subtasks[index].triggerState : checkState);
+    if (subtasks) {
+      // Initialize selectedOptionIndices based on defaultSelectedSubtaskIndex
+      const initialIndices = subtasks.map((subtask) => {
+        if (subtask.type === "choose" && subtask.defaultSelectedSubtaskIndex !== undefined) {
+          return subtask.defaultSelectedSubtaskIndex;
+        } else {
+          const index = subtask.options.findIndex(
+            (option) => option.triggerState === checkState
+          );
+          return index >= 0 ? index : null;
+        }
+      });
+      setSelectedOptionIndices(initialIndices);
+
+      // Update checked state based on the first 'choose' subtask's selected option
+      const firstChooseSubtaskIndex = subtasks.findIndex(subtask => subtask.type === "choose");
+      if (firstChooseSubtaskIndex >= 0 && initialIndices[firstChooseSubtaskIndex] !== null) {
+        setChecked(mapTriggerStateToChecklistStateForSingleSubtask(subtasks[firstChooseSubtaskIndex].options[initialIndices[firstChooseSubtaskIndex] as number].triggerState));
+      }
     }
-  }, [checkState, subtasks, defaultSelectedSubtaskIndex]);
+  }, [checkState, subtasks]);
 
   const handleToggle = () => {
     setChecked((prev) => {
@@ -166,15 +105,38 @@ export const ChecklistItem: React.FC<ChecklistItemProps> = ({
       else if (prev === "partiallycompleted") newState = "completed";
       else newState = "notcompleted";
 
-      const index = subtasks?.findIndex((sub) => sub.triggerState === newState) ?? -1;
-      setSelectedSubtaskIndex(index);
+      // Update selectedOptionIndices to reflect the new state
+      const newSelectedOptionIndices = subtasks?.map((subtask) => {
+        if (subtask.type === "choose") {
+          const index = subtask.options.findIndex(
+            (option) => option.triggerState === newState
+          );
+          return index >= 0 ? index : null;
+        }
+        return null;
+      });
+      setSelectedOptionIndices(newSelectedOptionIndices);
       return newState;
     });
   };
 
-  const handleSubtaskPress = (newState: ChecklistState, index: number) => {
-    setChecked(newState);
-    setSelectedSubtaskIndex(index);
+  const handleSubtaskPress = (
+    subtaskIndex: number,
+    optionIndex: number,
+    newState: string | number
+  ) => {
+    const newSelectedOptionIndices = [...selectedOptionIndices];
+    newSelectedOptionIndices[subtaskIndex] = optionIndex;
+    setSelectedOptionIndices(newSelectedOptionIndices);
+
+    // Update the checked state based on the new state, but only for 'choose' subtasks
+    if (subtasks[subtaskIndex].type === "choose") {
+      setChecked(mapTriggerStateToChecklistStateForSingleSubtask(newState));
+    }
+
+    if (subtasks[subtaskIndex].type === "counter") {
+      setSunnahRakat(newState as number);
+    }
   };
 
   const toggleCollapse = () => {
@@ -205,18 +167,57 @@ export const ChecklistItem: React.FC<ChecklistItemProps> = ({
             isSubtasksCollapsed={isSubtasksCollapsed}
             toggleCollapse={toggleCollapse}
             hasSubtasks={!!hasSubtasks}
+            sunnahRakat={sunnahRakat}
           />
         </View>
       </LinearGradient>
       {!isSubtasksCollapsed && subtasks && (
         <ChecklistSubtasks
           subtasks={subtasks}
-          selectedSubtaskIndex={selectedSubtaskIndex}
+          selectedOptionIndices={selectedOptionIndices}
           demo={demo}
           handleSubtaskPress={handleSubtaskPress}
         />
       )}
     </View>
   );
+};
+
+// Helper function to map triggerState to ChecklistState
+const mapTriggerStateToChecklistState = (subtasks: Subtask[], defaultSelectedSubtaskIndex: number): ChecklistState => {
+  if (!subtasks || subtasks.length === 0 || defaultSelectedSubtaskIndex === undefined) {
+    return "notcompleted";
+  }
+
+  const selectedOption = subtasks[0].options[defaultSelectedSubtaskIndex];
+  if (!selectedOption) {
+    return "notcompleted";
+  }
+
+  return mapTriggerStateToChecklistStateForSingleSubtask(selectedOption.triggerState);
+};
+
+const mapTriggerStateToChecklistStateForSingleSubtask = (triggerState: string | number | undefined): ChecklistState => {
+  if (triggerState === undefined) {
+    return "notcompleted";
+  }
+  if (typeof triggerState === "string") {
+    switch (triggerState) {
+      case "completed":
+        return "completed";
+      case "partiallycompleted":
+        return "partiallycompleted";
+      default:
+        return "notcompleted";
+    }
+  }
+  // else {
+  //   // Assuming number represents a counter value
+  //   if (triggerState > 0) {
+  //     return "partiallycompleted";
+  //   } else {
+  //     return "notcompleted";
+  //   }
+  // }
 };
 

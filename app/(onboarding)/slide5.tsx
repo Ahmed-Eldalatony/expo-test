@@ -21,10 +21,15 @@ export default function OnboardingSlide(): JSX.Element {
         t={t}
         checkState="notcompleted"
         demo={true}
-        defaultSelectedSubtaskIndex={1} // default to the second subtask
+        defaultSelectedSubtaskIndex={1}
         subtasks={[
-          { label: "جماعة في مسجد", triggerState: "completed" },
-          { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
+          {
+            type: "choose",
+            options: [
+              { label: "جماعة في مسجد", triggerState: "completed" },
+              { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
+            ],
+          },
         ]}
       />
       <Text className="text-lg mt-6 font-readexpro-semibold text-primary-900 text-center">
@@ -34,10 +39,15 @@ export default function OnboardingSlide(): JSX.Element {
         t={t}
         checkState="notcompleted"
         demo={true}
-        defaultSelectedSubtaskIndex={0} // default to the first subtask
-         subtasks={[
-          { label: "جماعة في مسجد", triggerState: "completed" },
-          { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
+        defaultSelectedSubtaskIndex={0}
+        subtasks={[
+          {
+            type: "choose",
+            options: [
+              { label: "جماعة في مسجد", triggerState: "completed" },
+              { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
+            ],
+          },
         ]}
       />
       <OnboardingButton

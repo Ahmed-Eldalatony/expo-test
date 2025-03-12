@@ -1,50 +1,61 @@
-import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useFonts, ReadexPro_400Regular, ReadexPro_500Medium, ReadexPro_600SemiBold, ReadexPro_700Bold } from '@expo-google-fonts/readex-pro';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import React from "react";
+import { View, Text, Image, TouchableOpacity, Dimensions } from "react-native";
+import { useTranslation } from "../../hooks/useTranslation";
+import { ChecklistItem } from "@/components/TaskComponent/ChecklistCompoenent";
+import { useRouter } from "expo-router";
+import { OnboardingButton } from "../../components/OnboardingButton";
 
-export default function Onboarding1() {
-  const [loaded] = useFonts({
-    ReadexPro_400Regular,
-    ReadexPro_500Medium,
-    ReadexPro_600SemiBold,
-    ReadexPro_700Bold
-  });
-
-  useEffect(() => {
-    SplashScreen.preventAutoHideAsync();
-
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
+export default function OnboardingSlide() {
+  const { t } = useTranslation();
   const router = useRouter();
 
-  const handleNext = () => {
-    // Navigate to the second page of the tour
-    router.push('/slide8');
-  };
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to the App!</Text>
-      <Text style={styles.description}>
-        This is the first page of our 10-page tour.
+    <View className="flex-1 bg-white items-center justify-center">
+      <Text className="text-3xl md:max-w-2xl mb-4 font-readexpro-semibold text-primary-800 text-center">
+        {t("slide7.title")}
       </Text>
-      <Button title="Next" onPress={handleNext} />
+      <Image
+        source={require("../../assets/images/notification3.png")}
+        style={{ width: '100%', maxWidth: '500px' }}
+        resizeMode="contain"
+        resizeMethod="resize"
+      />
+      <Image
+        source={require("../../assets/images/notification4.png")}
+        style={{ width: '100%', maxWidth: '500px' }}
+        resizeMode="contain"
+        resizeMethod="resize"
+      />
+     <Image
+        source={require("../../assets/images/Arrow.svg")}
+        className="-mt-2"
+        style={{ width: 25, height: 56 }}
+      />
+      <ChecklistItem
+        t={t}
+        checkState="notcompleted"
+        demo={false}
+        subtasks={[
+          {
+            type: "choose",
+            defaultSelectedSubtaskIndex: 0,
+            options: [
+              { label: "جماعة في مسجد", triggerState: "completed" },
+              { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
+            ],
+          },
+          {
+            type: "counter",
+            options: [
+              { label: "2 ركعات", triggerState: 2 },
+              { label: "4 ركعات", triggerState: 4 },
+              { label: "6 ركعات", triggerState: 6 },
+            ],
+          },
+        ]}
+      />
+      <OnboardingButton style={{ marginTop: 30 }} title={t("next")} onPress={() => router.push("/slide8")} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  title: { fontFamily: 'ReadexPro', fontSize: 24, marginBottom: 10 },
-  description: { fontFamily: 'ReadexPro', fontSize: 16, marginBottom: 20 },
-});
