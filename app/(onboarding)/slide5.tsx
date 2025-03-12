@@ -25,6 +25,7 @@ export default function OnboardingSlide(): JSX.Element {
         subtasks={[
           {
             type: "choose",
+            defaultSelectedSubtaskIndex: 1,
             options: [
               { label: "جماعة في مسجد", triggerState: "completed" },
               { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
@@ -43,6 +44,7 @@ export default function OnboardingSlide(): JSX.Element {
         subtasks={[
           {
             type: "choose",
+            defaultSelectedSubtaskIndex: 0,
             options: [
               { label: "جماعة في مسجد", triggerState: "completed" },
               { label: "جماعة دون مسجد", triggerState: "partiallycompleted" },
@@ -58,6 +60,4 @@ export default function OnboardingSlide(): JSX.Element {
     </View>
   );
 }
-
-// Map checklist states to their corresponding images.
 
