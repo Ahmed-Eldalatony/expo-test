@@ -13,8 +13,8 @@ export default function OnboardingSlide() {
       <Text className="text-3xl mb-4 font-readexpro-semibold text-primary-800 text-center">
         {t("slide6.title")}
       </Text>
-      <View>
-        <View className="bg-gray-100/70 p-4 text-center rounded-lg max-w-2xl ">
+      <View className="gap-10 max-w-2xl flex-col">
+        <View className="bg-gray-100/70 p-4 text-center rounded-lg  ">
           <Text className="text-lg mb-2 text-center font-readexpro-semibold text-primary-900">
             {t("slide6.hadeeth1")[0]}
           </Text>
@@ -23,19 +23,20 @@ export default function OnboardingSlide() {
               "{t("slide6.hadeeth1")[1]}"{" "}
             </Text>
           </View>
-          <View className="bg-gray-100/70 p-4  text-center rounded-lg ">
-            <Text className="text-lg mb-2 text-center font-readexpro-semibold text-primary-900">
-              {t("slide6.hadeeth2")[0]}
+        </View>
+        <View className="bg-gray-100/70 p-4  text-center rounded-lg ">
+          <Text className="text-lg mb-2 text-center font-readexpro-semibold text-primary-900">
+            {t("slide6.hadeeth2")[0]}
+          </Text>
+          <View className="flex-row leading-relaxed rtl flex-end ml-auto">
+            <Text className=" text-2xl leading-relaxed font-amiri-bold text-secondary-500">
+              "{t("slide6.hadeeth2")[1]}"{" "}
             </Text>
-            <View className="flex-row leading-relaxed rtl flex-end ml-auto">
-              <Text className=" text-2xl leading-relaxed font-amiri-bold text-secondary-500">
-                "{t("slide6.hadeeth2")[1]}"{" "}
-              </Text>
-            </View>
           </View>
         </View>
-        <OnboardingButton title={t("next")} onPress={() => router.push("/slide7")} />
       </View>
+
+      <OnboardingButton title={t("next")} onPress={() => router.push("/slide7")} />
     </View>
   );
 }

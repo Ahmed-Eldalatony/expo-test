@@ -1,12 +1,7 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity, Dimensions } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useTranslation } from "../../hooks/useTranslation";
-import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Image } from "react-native";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useRouter } from "expo-router";
-
 import { OnboardingButton } from "../../components/OnboardingButton";
 
 export default function OnboardingSlide() {
@@ -14,12 +9,12 @@ export default function OnboardingSlide() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 px-4 gap-12 items-center justify-center">
+    <View className="flex-1 bg-white px-4 gap-12 items-center justify-center">
       <Text className="text-3xl mb-4 font-readexpro-semibold text-primary-800 text-center">
         {t("slide3.title")}
       </Text>
 
-      <View className="bg-gray-200 p-4 rounded-lg ">
+      <View className="bg-gray-100/70 p-4 rounded-lg ">
         <Text className="text-lg text-center mb-2 font-readexpro-semibold text-primary-900">
           {t("slide3.hadeeth1")[0]}
         </Text>
@@ -38,7 +33,7 @@ export default function OnboardingSlide() {
         </View>
       </View>
       <View>
-        <View className="bg-gray-200 p-4 text-center rounded-lg ">
+        <View className="bg-gray-100/70 p-4 text-center rounded-lg ">
           <Text className="text-lg mb-2 text-center font-readexpro-semibold text-primary-900">
             {t("slide3.hadeeth2")[0]}
           </Text>
