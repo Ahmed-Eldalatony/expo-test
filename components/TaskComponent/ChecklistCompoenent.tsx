@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { ChecklistMainTask } from "./ChecklistMainTask";
 import { ChecklistSubtasks } from "./ChecklistSubtasks";
