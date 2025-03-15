@@ -47,7 +47,7 @@ export default function RootLayout() {
   return (
     <>
       {/* {!hasCompletedOnboarding() && <Redirect href="/slide1" />} */}
-      <Stack></Stack>
+      <Stack ></Stack>
       {/* <StatusBar style="auto" /> */}
     </>
   );

@@ -1,10 +1,41 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useRouter } from "expo-router";
 import { OnboardingButton } from "../../components/OnboardingButton";
-import { LinearGradient } from 'expo-linear-gradient';
-import { TimerPickerModal } from "react-native-timer-picker";
+import { TimePicker } from "@/components/TimePicker";
+import { MMKV } from 'react-native-mmkv';
+import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
+
+const storage = new MMKV();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
+const scheduleNotification = async (time, t) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const now = new Date();
+  const trigger = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+
+  if (trigger < now) {
+    trigger.setDate(trigger.getDate() + 1);
+  }
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: t("reminderTitle"),
+      body: t("reminderBody"),
+      sound: 'default',
+    },
+    trigger,
+  });
+};
 
 // =======================
 // Main Onboarding Slide
@@ -13,13 +44,48 @@ export default function OnboardingSlide() {
   const { t } = useTranslation();
   const router = useRouter();
 
-  // Step 1: Choose reminder method
-  // Step 2: Custom selection (choose quarter/hizb/juz value)
-  // Step 3: Add reminder(s)
   const [step, setStep] = useState(1);
   const [selectionType, setSelectionType] = useState<string | null>(null);
   const [customSelection, setCustomSelection] = useState<number | null>(null);
   const [reminders, setReminders] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadReminders = async () => {
+      try {
+        const storedReminders = storage.getString('reminders');
+        if (storedReminders) {
+          const parsedReminders = JSON.parse(storedReminders);
+          setReminders(parsedReminders);
+          parsedReminders.forEach(reminder => scheduleNotification(reminder, t)); // Schedule existing reminders
+        }
+      } catch (error) {
+        console.error("Failed to load reminders:", error);
+      }
+    };
+
+    const getPermissions = async () => {
+      let { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        alert('No notification permissions!');
+      }
+    };
+    loadReminders();
+    getPermissions();
+
+    // Set up interval to check reminders every minute
+    const intervalId = setInterval(() => {
+      const now = new Date();
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      reminders.forEach(reminderTime => {
+        if (reminderTime === currentTime) {
+          scheduleNotification(reminderTime, t);
+        }
+      });
+    }, 60000); // Check every minute
+
+    return () => clearInterval(intervalId); // Clear interval on unmount
+  }, [t, reminders]);
 
   const handleNext = () => {
     if (step === 1) {
@@ -92,7 +158,18 @@ export default function OnboardingSlide() {
       {step === 3 && (
         <ReminderPrompt
           reminders={reminders}
-          addReminder={(reminder) => setReminders([...reminders, reminder])}
+          addReminder={(reminder) => {
+            const updatedReminders = [...reminders, reminder];
+            setReminders(updatedReminders);
+            storage.set('reminders', JSON.stringify(updatedReminders));
+            scheduleNotification(reminder, t);
+          }}
+          removeReminder={(index) => {
+            const newReminders = [...reminders];
+            newReminders.splice(index, 1);
+            setReminders(newReminders);
+            storage.set('reminders', JSON.stringify(newReminders));
+          }}
         />
       )}
 
@@ -111,7 +188,7 @@ export default function OnboardingSlide() {
 // =======================
 // Step 1: Selection Prompt
 // =======================
-export const SelectionPrompt = ({ selectionType, setSelectionType }) => {
+const SelectionPrompt = ({ selectionType, setSelectionType }) => {
   const { t } = useTranslation();
   const options = [
     { type: "quarter", label: t("byQuarter") },
@@ -128,9 +205,8 @@ export const SelectionPrompt = ({ selectionType, setSelectionType }) => {
         {options.map((o) => (
           <TouchableOpacity
             key={o.type}
-            className={`px-4 py-2 rounded-md ${
-              selectionType === o.type ? "bg-primary-200" : "bg-primary-100"
-            }`}
+            className={`px-4 py-2 rounded-md ${selectionType === o.type ? "bg-primary-200" : "bg-primary-100"
+              }`}
             onPress={() => setSelectionType(o.type)}
           >
             <Text className="text-primary-800 font-readexpro-semibold">
@@ -146,7 +222,7 @@ export const SelectionPrompt = ({ selectionType, setSelectionType }) => {
 // ==============================
 // Step 2: Custom Selection Prompt
 // ==============================
-export const CustomSelectionPrompt = ({
+const CustomSelectionPrompt = ({
   selectionType,
   customSelection,
   setCustomSelection,
@@ -215,7 +291,7 @@ export const CustomSelectionPrompt = ({
 // ==================
 // Step 3: Reminder Prompt
 // ==================
-const ReminderPrompt = ({ reminders, addReminder }) => {
+const ReminderPrompt = ({ reminders, addReminder, removeReminder }) => {
   const { t } = useTranslation();
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
 
@@ -230,15 +306,19 @@ const ReminderPrompt = ({ reminders, addReminder }) => {
         {t("slide8.description2")}
       </Text>
       {reminders.map((reminder, index) => (
-        <Text key={index} className="text-xl text-primary-800 mb-2">
-          {reminder}
-        </Text>
+        <View key={index} className="flex-row items-center mb-2">
+          <Text className="text-xl text-primary-800">{reminder}</Text>
+          <TouchableOpacity onPress={() => removeReminder(index)} className="ml-2">
+            <Text className="text-red-500">×</Text>
+          </TouchableOpacity>
+        </View>
       ))}
-      <TouchableOpacity onPress={() => setTimePickerVisible(true)}>
-        <View className="mt-4  px-4 py-2 rounded-md">
+      <TouchableOpacity onPress={() => setTimePickerVisible(true)} className="mt-4">
+        <View className="px-4 py-2 rounded-md">
           <Text className="text-primary-800 font-readexpro-semibold">
-            {reminders.length===0 && !isTimePickerVisible&&  t("addReminder")}
-            { reminders.length>0  && !isTimePickerVisible&&  t("addAnotherReminder")}
+            {reminders.length === 0 && !isTimePickerVisible && t("addReminder")}
+            {reminders.length > 0 && !isTimePickerVisible &&
+              t("addAnotherReminder")}
           </Text>
         </View>
       </TouchableOpacity>
@@ -299,7 +379,7 @@ const CustomSelect = ({
 // Helper Functions
 // ==================
 const toArabicNumerals = (num: number): string => {
-  return String(num).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]);
+  return String(num).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
 };
 
 const formatArabic = (q: number, t: (key: string) => string): string => {
@@ -308,100 +388,16 @@ const formatArabic = (q: number, t: (key: string) => string): string => {
   const quarter = q % 4;
   return [
     juz &&
-      (juz === 1 ? t("juzOne") : `${toArabicNumerals(juz)} ${t("juz")}`),
+    (juz === 1 ? t("juzOne") : `${toArabicNumerals(juz)} ${t("juz")}`),
     hizb &&
-      (hizb === 1 ? t("hizbOne") : `${toArabicNumerals(hizb)} ${t("hizb")}`),
+    (hizb === 1 ? t("hizbOne") : `${toArabicNumerals(hizb)} ${t("hizb")}`),
     quarter &&
-      (quarter === 1
-        ? t("quarterOne")
-        : `${toArabicNumerals(quarter)} ${t("quarter")}`),
+    (quarter === 1
+      ? t("quarterOne")
+      : `${toArabicNumerals(quarter)} ${t("quarter")}`),
   ]
     .filter(Boolean)
     .join(" و ");
 };
 
-// ==================
-// Modified TimePicker Component
-// ==================
-const TimePicker = ({ visible, onClose, onTimeSelected }) => {
-  const [showPicker, setShowPicker] = useState(false);
-  const [alarmString, setAlarmString] = useState<string | null>(null);
-  const { t } = useTranslation();
 
-  const formatTime = ({
-    hours,
-    minutes,
-    seconds,
-  }: {
-    hours?: number;
-    minutes?: number;
-    seconds?: number;
-  }) => {
-    const timeParts = [];
-    if (hours !== undefined) {
-      timeParts.push(hours.toString().padStart(2, "0"));
-    }
-    if (minutes !== undefined) {
-      timeParts.push(minutes.toString().padStart(2, "0"));
-    }
-    if (seconds !== undefined) {
-      timeParts.push(seconds.toString().padStart(2, "0"));
-    }
-    return timeParts.join(":");
-  };
-
-  return (
-    <View className=" items-center justify-center ">
-      {/* <Text className="text-lg text-primary-900 font-readexpro-semibold mb-2"> */}
-      {/*   {/* {t("setReminderTime")} */}
-      {/* </Text> */}
-      <TouchableOpacity activeOpacity={0.7} onPress={() => setShowPicker(true)}>
-        <View className="items-center">
-          {alarmString !== null && (
-            <Text className="text-5xl text-primary-900 font-readexpro-medium">
-              {alarmString}
-            </Text>
-          )}
-          <TouchableOpacity activeOpacity={0.7} onPress={() => setShowPicker(true)}>
-            <View className="mt-3">
-              <Text className="py-2 px-4 border border-primary-200 rounded-lg text-base overflow-hidden text-primary-900 font-readexpro-regular">
-                {t("setAlarm")}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-      <TimerPickerModal
-        visible={showPicker}
-        setIsVisible={setShowPicker}
-        onConfirm={(pickedDuration) => {
-          const formattedTime = formatTime(pickedDuration);
-          setAlarmString(formattedTime);
-          setShowPicker(false);
-          if (onTimeSelected) {
-            onTimeSelected(formattedTime);
-          }
-        }}
-        secondsPickerIsDisabled
-        hideSeconds
-        use12HourPicker
-        onCancel={() => setShowPicker(false)}
-        closeOnOverlayPress
-        LinearGradient={LinearGradient}
-        styles={{
-          confirmButton: {
-            backgroundColor: "#1F9C5B",
-            color: "#ffffff",
-          },
-          cancelButton: {
-            backgroundColor: "#A69D7F",
-            color: "#281700",
-          },
-        }}
-        modalProps={{
-          overlayOpacity: 0.2,
-        }}
-      />
-    </View>
-  );
-};

@@ -1,11 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { TimerPickerModal } from "react-native-timer-picker";
 import { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { useTranslation } from '@/hooks/useTranslation';
-// import { Audio } from "expo-av"; // for audio feedback (click sound as you scroll)
-import * as Haptics from "expo-haptics"; // for haptic feedback
-const TimePicker = ({ visible, onClose, onTimeSelected }) => {
+import { useTranslation } from "@/hooks/useTranslation";
+import { Text, View, TouchableOpacity } from "react-native";
+
+export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [alarmString, setAlarmString] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -33,10 +32,7 @@ const TimePicker = ({ visible, onClose, onTimeSelected }) => {
   };
 
   return (
-    <View className="bg-white items-center justify-center p-5 rounded-lg">
-      <Text className="text-lg text-primary-900 font-readexpro-semibold mb-2">
-        {t("setReminderTime")}
-      </Text>
+    <View className=" items-center justify-center ">
       <TouchableOpacity activeOpacity={0.7} onPress={() => setShowPicker(true)}>
         <View className="items-center">
           {alarmString !== null && (
@@ -45,7 +41,7 @@ const TimePicker = ({ visible, onClose, onTimeSelected }) => {
             </Text>
           )}
           <TouchableOpacity activeOpacity={0.7} onPress={() => setShowPicker(true)}>
-            <View className="mt-7">
+            <View className="mt-3">
               <Text className="py-2 px-4 border border-primary-200 rounded-lg text-base overflow-hidden text-primary-900 font-readexpro-regular">
                 {t("setAlarm")}
               </Text>
@@ -86,4 +82,4 @@ const TimePicker = ({ visible, onClose, onTimeSelected }) => {
       />
     </View>
   );
-};
+}
