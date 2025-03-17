@@ -1,13 +1,23 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState, useEffect } from "react";
+import { Text, View, TouchableOpacity, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { TimerPickerModal } from "react-native-timer-picker";
-import { useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Text, View, TouchableOpacity } from "react-native";
+import { scheduleNotification } from "@/utils/notificationScheduler";
+import { saveQuranReminderTime, getQuranReminderTime } from "@/app/storage";
 
 export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [alarmString, setAlarmString] = useState<string | null>(null);
   const { t } = useTranslation();
+
+  // Load a previously saved reminder time, if it exists
+  useEffect(() => {
+    const savedTime = getQuranReminderTime();
+    if (savedTime) {
+      setAlarmString(savedTime);
+    }
+  }, []);
 
   const formatTime = ({
     hours,
@@ -31,38 +41,47 @@ export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
     return timeParts.join(":");
   };
 
+  const handleTimeConfirm = (pickedDuration) => {
+    const formattedTime = formatTime(pickedDuration);
+    setAlarmString(formattedTime);
+    setShowPicker(false);
+
+    // Save the chosen time to MMKV storage
+    saveQuranReminderTime(formattedTime);
+
+    // Schedule the notification (this handles both web and mobile)
+    scheduleNotification(formattedTime).then((notificationId) => {
+      if (notificationId === null) {
+        Alert.alert("Error scheduling notification");
+      }
+    });
+
+    if (onTimeSelected) {
+      onTimeSelected(formattedTime);
+    }
+  };
+
   return (
-    <View className=" items-center justify-center ">
+    <View className="items-center justify-center">
       <TouchableOpacity activeOpacity={0.7} onPress={() => setShowPicker(true)}>
         <View className="items-center">
-          {alarmString !== null && (
-            <Text className="text-5xl text-primary-900 font-readexpro-medium">
-              {alarmString}
-            </Text>
-          )}
           <TouchableOpacity activeOpacity={0.7} onPress={() => setShowPicker(true)}>
             <View className="mt-3">
               <Text className="py-2 px-4 border border-primary-200 rounded-lg text-base overflow-hidden text-primary-900 font-readexpro-regular">
-                {t("setAlarm")}
+                {t("addAlarm")}
               </Text>
             </View>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
       <TimerPickerModal
+        initialValue={{ hours: 6, minutes: 31 }}
         visible={showPicker}
         setIsVisible={setShowPicker}
-        onConfirm={(pickedDuration) => {
-          const formattedTime = formatTime(pickedDuration);
-          setAlarmString(formattedTime);
-          setShowPicker(false);
-          if (onTimeSelected) {
-            onTimeSelected(formattedTime);
-          }
-        }}
-        secondsPickerIsDisabled
-        hideSeconds
-        use12HourPicker
+        onConfirm={handleTimeConfirm}
+        use12HourPicker={true}
+        secondsPickerIsDisabled={true}
+        hideSeconds={true}
         onCancel={() => setShowPicker(false)}
         closeOnOverlayPress
         LinearGradient={LinearGradient}
@@ -82,4 +101,5 @@ export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
       />
     </View>
   );
-}
+};
+

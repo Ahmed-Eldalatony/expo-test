@@ -5,37 +5,42 @@ import { useRouter } from "expo-router";
 import { OnboardingButton } from "../../components/OnboardingButton";
 import { TimePicker } from "@/components/TimePicker";
 import { MMKV } from 'react-native-mmkv';
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
 
 const storage = new MMKV();
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+import { prayerTimes } from "@/utils/adhan-times";
 
-const scheduleNotification = async (time, t) => {
-  const [hours, minutes] = time.split(':').map(Number);
-  const now = new Date();
-  const trigger = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+type SelectionType = "quarter" | "hizb" | "juz" | null;
 
-  if (trigger < now) {
-    trigger.setDate(trigger.getDate() + 1);
-  }
+interface Option {
+  type: string;
+  label: string;
+}
 
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: t("reminderTitle"),
-      body: t("reminderBody"),
-      sound: 'default',
-    },
-    trigger,
-  });
-};
+interface CustomSelectProps {
+  label: string;
+  options: { value: number; label: string }[];
+  formatOption?: (value: number) => string;
+  selectedValue: number | null;
+  onValueChange: (value: number) => void;
+}
+
+interface SelectionPromptProps {
+  selectionType: SelectionType;
+  setSelectionType: (type: SelectionType) => void;
+}
+
+interface CustomSelectionPromptProps {
+  selectionType: SelectionType;
+  customSelection: number | null;
+  setCustomSelection: (selection: number | null) => void;
+}
+
+interface ReminderPromptProps {
+  reminders: string[];
+  addReminder: (reminder: string) => void;
+  removeReminder: (index: number) => void;
+}
 
 // =======================
 // Main Onboarding Slide
@@ -45,47 +50,27 @@ export default function OnboardingSlide() {
   const router = useRouter();
 
   const [step, setStep] = useState(1);
-  const [selectionType, setSelectionType] = useState<string | null>(null);
+  const [selectionType, setSelectionType] = useState<SelectionType>(null);
   const [customSelection, setCustomSelection] = useState<number | null>(null);
   const [reminders, setReminders] = useState<string[]>([]);
+  // const [notificationIds, setNotificationIds] = useState<string[]>([]);
+  const times = prayerTimes();
 
+  console.log("==========", times)
   useEffect(() => {
     const loadReminders = async () => {
       try {
         const storedReminders = storage.getString('reminders');
         if (storedReminders) {
-          const parsedReminders = JSON.parse(storedReminders);
-          setReminders(parsedReminders);
-          parsedReminders.forEach(reminder => scheduleNotification(reminder, t)); // Schedule existing reminders
+          setReminders(JSON.parse(storedReminders));
         }
       } catch (error) {
         console.error("Failed to load reminders:", error);
       }
     };
 
-    const getPermissions = async () => {
-      let { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        alert('No notification permissions!');
-      }
-    };
     loadReminders();
-    getPermissions();
-
-    // Set up interval to check reminders every minute
-    const intervalId = setInterval(() => {
-      const now = new Date();
-      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-      reminders.forEach(reminderTime => {
-        if (reminderTime === currentTime) {
-          scheduleNotification(reminderTime, t);
-        }
-      });
-    }, 60000); // Check every minute
-
-    return () => clearInterval(intervalId); // Clear interval on unmount
-  }, [t, reminders]);
+  }, []);
 
   const handleNext = () => {
     if (step === 1) {
@@ -158,13 +143,12 @@ export default function OnboardingSlide() {
       {step === 3 && (
         <ReminderPrompt
           reminders={reminders}
-          addReminder={(reminder) => {
+          addReminder={(reminder: string) => {
             const updatedReminders = [...reminders, reminder];
             setReminders(updatedReminders);
             storage.set('reminders', JSON.stringify(updatedReminders));
-            scheduleNotification(reminder, t);
           }}
-          removeReminder={(index) => {
+          removeReminder={(index: number) => {
             const newReminders = [...reminders];
             newReminders.splice(index, 1);
             setReminders(newReminders);
@@ -188,9 +172,9 @@ export default function OnboardingSlide() {
 // =======================
 // Step 1: Selection Prompt
 // =======================
-const SelectionPrompt = ({ selectionType, setSelectionType }) => {
+const SelectionPrompt: React.FC<SelectionPromptProps> = ({ selectionType, setSelectionType }) => {
   const { t } = useTranslation();
-  const options = [
+  const options: Option[] = [
     { type: "quarter", label: t("byQuarter") },
     { type: "hizb", label: t("byHizb") },
     { type: "juz", label: t("byJuz") },
@@ -222,11 +206,12 @@ const SelectionPrompt = ({ selectionType, setSelectionType }) => {
 // ==============================
 // Step 2: Custom Selection Prompt
 // ==============================
-const CustomSelectionPrompt = ({
+const CustomSelectionPrompt: React.FC<CustomSelectionPromptProps> = ({
   selectionType,
   customSelection,
   setCustomSelection,
 }) => {
+  console.log(customSelection)
   const { t } = useTranslation();
 
   const renderSelectComponent = useCallback(() => {
@@ -291,13 +276,10 @@ const CustomSelectionPrompt = ({
 // ==================
 // Step 3: Reminder Prompt
 // ==================
-const ReminderPrompt = ({ reminders, addReminder, removeReminder }) => {
+const ReminderPrompt: React.FC<ReminderPromptProps> = ({ reminders, addReminder, removeReminder }) => {
   const { t } = useTranslation();
-  const [isTimePickerVisible, setTimePickerVisible] = useState(false);
-
-  const handleTimeSelected = (time) => {
+  const handleTimeSelected = (time: string) => {
     addReminder(time);
-    setTimePickerVisible(false);
   };
 
   return (
@@ -307,28 +289,15 @@ const ReminderPrompt = ({ reminders, addReminder, removeReminder }) => {
       </Text>
       {reminders.map((reminder, index) => (
         <View key={index} className="flex-row items-center mb-2">
-          <Text className="text-xl text-primary-800">{reminder}</Text>
+          <Text className="text-xl text-primary-800 font-readexpro-medium">{reminder}</Text>
           <TouchableOpacity onPress={() => removeReminder(index)} className="ml-2">
-            <Text className="text-red-500">×</Text>
+            <Text className="text-red-500 text-2xl ">×</Text>
           </TouchableOpacity>
         </View>
       ))}
-      <TouchableOpacity onPress={() => setTimePickerVisible(true)} className="mt-4">
-        <View className="px-4 py-2 rounded-md">
-          <Text className="text-primary-800 font-readexpro-semibold">
-            {reminders.length === 0 && !isTimePickerVisible && t("addReminder")}
-            {reminders.length > 0 && !isTimePickerVisible &&
-              t("addAnotherReminder")}
-          </Text>
-        </View>
-      </TouchableOpacity>
-      {isTimePickerVisible && (
-        <TimePicker
-          visible={isTimePickerVisible}
-          onClose={() => setTimePickerVisible(false)}
-          onTimeSelected={handleTimeSelected}
-        />
-      )}
+      <TimePicker
+        onTimeSelected={handleTimeSelected}
+      />
     </View>
   );
 };
@@ -336,7 +305,7 @@ const ReminderPrompt = ({ reminders, addReminder, removeReminder }) => {
 // ==================
 // CustomSelect Component
 // ==================
-const CustomSelect = ({
+const CustomSelect: React.FC<CustomSelectProps> = ({
   label,
   options,
   formatOption,
@@ -399,5 +368,4 @@ const formatArabic = (q: number, t: (key: string) => string): string => {
     .filter(Boolean)
     .join(" و ");
 };
-
 

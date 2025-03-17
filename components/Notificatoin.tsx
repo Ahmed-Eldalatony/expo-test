@@ -1,8 +1,7 @@
 import * as Notifications from "expo-notifications";
 import React from "react";
 import { View, Button, Platform, Alert } from "react-native";
-
-export const sendTestNotification = async () => {
+export const sendNotification = async () => {
   if (Platform.OS === "web") {
     if ("Notification" in window) {
       Notification.requestPermission().then((permission) => {
