@@ -1,7 +1,12 @@
 import * as Notifications from "expo-notifications";
 import { Platform, Alert } from "react-native";
+import BackgroundFetch from "react-native-background-fetch";
+import moment from "moment";
 
-// Set notification handler to determine how notifications are shown
+import { prayerTimes,prayerNames } from "./adhan-times";
+
+
+// Set the notification handler so notifications are shown when received.
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -10,30 +15,32 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export const scheduleNotification = async (time: string) => {
-  const [hours, minutes] = time.split(":").map(Number);
+// This function accepts a time string in "HH:mm" or "h:mm A" format
+// and schedules a notification at that time.
+export const scheduleNotification = async (timeString) => {
+  // Parse the time string. Here we assume a 24-hour "HH:mm" format.
+  const [hoursStr, minutesStr] = timeString.split(':');
+  const hours = Number(hoursStr);
+  const minutes = Number(minutesStr);
+
+  // Create a trigger Date object using the provided time.
   let trigger = new Date();
-  trigger.setHours(hours);
-  trigger.setMinutes(minutes);
-  trigger.setSeconds(0);
-  trigger.setMilliseconds(0);
+  trigger.setHours(hours, minutes, 0, 0);
 
   const now = new Date();
-
-  // If the trigger time is in the past, set it to the next day
+  // If the scheduled time is already past for today, move it to tomorrow.
   if (trigger <= now) {
     trigger.setDate(trigger.getDate() + 1);
   }
 
   const secondsUntilTrigger = (trigger.getTime() - now.getTime()) / 1000;
-
   if (secondsUntilTrigger < 0) {
     console.warn("Notification trigger time is in the past.");
     return null;
   }
 
   if (Platform.OS === "web") {
-    // Schedule a web notification using setTimeout
+    // For web, simulate notifications with setTimeout.
     setTimeout(() => {
       if ("Notification" in window) {
         Notification.requestPermission().then((permission) => {
@@ -49,7 +56,7 @@ export const scheduleNotification = async (time: string) => {
         Alert.alert("Browser does not support notifications");
       }
     }, secondsUntilTrigger * 1000);
-    console.log(`Web notification scheduled for ${time}`);
+    console.log(`Web notification scheduled for ${timeString}`);
     return "web-scheduled";
   } else {
     try {
@@ -61,10 +68,11 @@ export const scheduleNotification = async (time: string) => {
         },
         trigger: {
           seconds: secondsUntilTrigger,
-          repeats: true,
+          // For testing you may want to disable repeats.
+          repeats: false,
         },
       });
-      console.log(`Notification scheduled with ID: ${notificationId} for ${time}`);
+      console.log(`Notification scheduled with ID: ${notificationId} for ${timeString}`);
       return notificationId;
     } catch (error) {
       console.error("Error scheduling notification:", error);
@@ -73,3 +81,59 @@ export const scheduleNotification = async (time: string) => {
   }
 };
 
+
+
+
+
+
+
+const beforeSalah=true
+const afterSalah=false
+const schedulePrayerNotifications = async () => {
+  for (const prayerName of prayerNames) {
+    const prayerTime = prayerTimes().timeForPrayer(prayerName);
+
+    if (prayerTime) {
+      const prayerDate = moment(prayerTime);
+
+      if (beforeSalah) {
+        const beforeTime = prayerDate.clone().subtract(5, 'minutes');
+        if (beforeTime.isAfter(moment())) {
+          const timeString = beforeTime.format('HH:mm');
+          await scheduleNotification(timeString);
+          console.log(`Scheduled before ${prayerName} notification for ${timeString}`);
+        }
+      }
+
+      if (afterSalah) {
+        const afterTime = prayerDate.clone().add(5, 'minutes');
+        if (afterTime.isAfter(moment())) {
+          const timeString = afterTime.format('HH:mm');
+          await scheduleNotification(timeString);
+          console.log(`Scheduled after ${prayerName} notification for ${timeString}`);
+        }
+      }
+    }
+  }
+};
+
+// Register background task
+const registerBackgroundTask = async () => {
+  await BackgroundFetch.configure(
+    {
+      minimumFetchInterval: 15, // Run every 15 minutes
+      stopOnTerminate: false, // Continue after app close
+      startOnBoot: true, // Start on device boot
+    },
+    async (taskId) => {
+      console.log("Background fetch triggered!");
+      await schedulePrayerNotifications();
+      BackgroundFetch.finish(taskId);
+    },
+    (error) => {
+      console.error("Background Fetch failed to start:", error);
+    }
+  );
+};
+
+export default registerBackgroundTask;

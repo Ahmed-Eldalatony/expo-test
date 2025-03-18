@@ -48,7 +48,7 @@ export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
 
     // Save the chosen time to MMKV storage
     saveQuranReminderTime(formattedTime);
-
+    console.log("time now is", formattedTime)
     // Schedule the notification (this handles both web and mobile)
     scheduleNotification(formattedTime).then((notificationId) => {
       if (notificationId === null) {
@@ -75,7 +75,7 @@ export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
         </View>
       </TouchableOpacity>
       <TimerPickerModal
-        initialValue={{ hours: 6, minutes: 31 }}
+        initialValue={{ hours: 12, minutes: 56 }}
         visible={showPicker}
         setIsVisible={setShowPicker}
         onConfirm={handleTimeConfirm}

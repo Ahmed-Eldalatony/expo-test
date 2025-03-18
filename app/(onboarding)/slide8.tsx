@@ -1,14 +1,20 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { useState, useCallback, useEffect } from "react";
+import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity,Alert } from "react-native";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useRouter } from "expo-router";
 import { OnboardingButton } from "../../components/OnboardingButton";
+
+import moment from "moment-timezone";
+import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from 'adhan';
 import { TimePicker } from "@/components/TimePicker";
 import { MMKV } from 'react-native-mmkv';
+import { formatArabic, toArabicNumerals } from "@/utils/formatArabic";
+import { getPrayerTimes, prayerNames } from "@/utils/adhan-times";
+import { scheduleNotification } from "@/utils/notificationScheduler";
+import dayjs from 'dayjs';
 
 const storage = new MMKV();
-
-import { prayerTimes } from "@/utils/adhan-times";
 
 type SelectionType = "quarter" | "hizb" | "juz" | null;
 
@@ -40,10 +46,13 @@ interface ReminderPromptProps {
   reminders: string[];
   addReminder: (reminder: string) => void;
   removeReminder: (index: number) => void;
+  onBeforeSalahSelected: (selected: boolean) => void;
+  onAfterSalahSelected: (selected: boolean) => void;
 }
 
-// =======================
+// ========================================================
 // Main Onboarding Slide
+// ========================================================
 // =======================
 export default function OnboardingSlide() {
   const { t } = useTranslation();
@@ -53,10 +62,9 @@ export default function OnboardingSlide() {
   const [selectionType, setSelectionType] = useState<SelectionType>(null);
   const [customSelection, setCustomSelection] = useState<number | null>(null);
   const [reminders, setReminders] = useState<string[]>([]);
-  // const [notificationIds, setNotificationIds] = useState<string[]>([]);
-  const times = prayerTimes();
+  const [beforeSalah, setBeforeSalah] = useState(false);
+  const [afterSalah, setAfterSalah] = useState(false);
 
-  console.log("==========", times)
   useEffect(() => {
     const loadReminders = async () => {
       try {
@@ -70,9 +78,10 @@ export default function OnboardingSlide() {
     };
 
     loadReminders();
+
   }, []);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 1) {
       if (selectionType) {
         setStep(2);
@@ -81,10 +90,11 @@ export default function OnboardingSlide() {
       if (customSelection) {
         setStep(3);
       }
-    } else if (step === 3) {
-      if (reminders.length > 0) {
-        router.push("/slide9");
-      }
+    // } else if (step === 3) {
+    //   if (reminders.length > 0) {
+    //     await scheduleAllNotifications();
+    //     router.push("/slide9");
+    //   }
     }
   };
 
@@ -154,6 +164,8 @@ export default function OnboardingSlide() {
             setReminders(newReminders);
             storage.set('reminders', JSON.stringify(newReminders));
           }}
+          onBeforeSalahSelected={(selected) => setBeforeSalah(selected)}
+          onAfterSalahSelected={(selected) => setAfterSalah(selected)}
         />
       )}
 
@@ -169,9 +181,9 @@ export default function OnboardingSlide() {
   );
 }
 
-// =======================
+// ========================================================
 // Step 1: Selection Prompt
-// =======================
+// ========================================================
 const SelectionPrompt: React.FC<SelectionPromptProps> = ({ selectionType, setSelectionType }) => {
   const { t } = useTranslation();
   const options: Option[] = [
@@ -273,10 +285,16 @@ const CustomSelectionPrompt: React.FC<CustomSelectionPromptProps> = ({
   return <View className="items-center">{renderSelectComponent()}</View>;
 };
 
-// ==================
+// ========================================================
 // Step 3: Reminder Prompt
-// ==================
-const ReminderPrompt: React.FC<ReminderPromptProps> = ({ reminders, addReminder, removeReminder }) => {
+// ========================================================
+const ReminderPrompt: React.FC<ReminderPromptProps> = ({
+  reminders,
+  addReminder,
+  removeReminder,
+  onBeforeSalahSelected,
+  onAfterSalahSelected,
+}) => {
   const { t } = useTranslation();
   const handleTimeSelected = (time: string) => {
     addReminder(time);
@@ -287,24 +305,106 @@ const ReminderPrompt: React.FC<ReminderPromptProps> = ({ reminders, addReminder,
       <Text className="text-lg font-readexpro-semibold text-primary-900 mb-4">
         {t("slide8.description2")}
       </Text>
-      {reminders.map((reminder, index) => (
-        <View key={index} className="flex-row items-center mb-2">
-          <Text className="text-xl text-primary-800 font-readexpro-medium">{reminder}</Text>
-          <TouchableOpacity onPress={() => removeReminder(index)} className="ml-2">
-            <Text className="text-red-500 text-2xl ">×</Text>
-          </TouchableOpacity>
-        </View>
-      ))}
-      <TimePicker
-        onTimeSelected={handleTimeSelected}
+      <TabbedReminderSection
+        reminders={reminders}
+        addReminder={addReminder}
+        removeReminder={removeReminder}
+        onBeforeSalahSelected={onBeforeSalahSelected}
+        onAfterSalahSelected={onAfterSalahSelected}
       />
     </View>
   );
 };
 
-// ==================
+const TabbedReminderSection: React.FC<ReminderPromptProps> = ({
+  reminders,
+  addReminder,
+  removeReminder,
+  onBeforeSalahSelected,
+  onAfterSalahSelected,
+}) => {
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'salah' | 'custom'>('custom');
+
+  return (
+    <View className="items-center">
+      <View className="flex-row  mb-4 space-x-4">
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-md ${activeTab === 'salah' ? 'bg-primary-200' : 'bg-primary-100'}`}
+          onPress={() => setActiveTab('salah')}
+        >
+          <Text className="text-primary-800 font-readexpro-semibold">
+            {t("dependingOnSalah")}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-md ${activeTab === 'custom' ? 'bg-primary-200' : 'bg-primary-100'}`}
+          onPress={() => setActiveTab('custom')}
+        >
+          <Text className="text-primary-800 font-readexpro-semibold">
+            {t("customTime")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === 'salah' && (
+        <View>
+          <CheckBox
+            label={t("before")}
+            onChange={(selected) => onBeforeSalahSelected(selected)}
+          />
+          <CheckBox
+            label={t("after")}
+            onChange={(selected) => onAfterSalahSelected(selected)}
+          />
+
+          <Text className=" my-2 text-sm text-primary-900">{t("youCanChooseBoth")}</Text>
+        </View>
+      )}
+
+      {activeTab === 'custom' && (
+        <View>
+          {reminders.map((reminder, index) => (
+            <View key={index} className="flex-row items-center mb-2">
+              <Text className="text-xl text-primary-800 font-readexpro-medium">{reminder}</Text>
+              <TouchableOpacity onPress={() => removeReminder(index)} className="ml-2">
+                <Text className="text-red-500 text-2xl ">×</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+          <TimePicker onTimeSelected={addReminder} />
+        </View>
+      )}
+    </View>
+  );
+};
+
+interface CheckboxItemProps {
+  label: string;
+}
+
+const CheckboxItem: React.FC<CheckboxItemProps> = ({ label }) => {
+  const [checked, setChecked] = useState(false);
+
+  return (
+    <TouchableOpacity className="flex-row items-center py-1" onPress={() => setChecked(!checked)}>
+      <View
+        className={`w-6 h-6 rounded-full border-2 mr-2 items-center justify-center ${
+          checked
+            ? 'bg-primary-500 border-primary-500'
+            : 'border-primary-300 dark:border-primary-200'
+        }`}
+      >
+        {checked && <Text className="text-white">✓</Text>}
+      </View>
+      <Text className="text-primary-900 dark:text-primary-100">{label}</Text>
+    </TouchableOpacity>
+  );
+};
+
+// ========================================================
 // CustomSelect Component
-// ==================
+// ========================================================
 const CustomSelect: React.FC<CustomSelectProps> = ({
   label,
   options,
@@ -344,28 +444,30 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   );
 };
 
-// ==================
-// Helper Functions
-// ==================
-const toArabicNumerals = (num: number): string => {
-  return String(num).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
-};
+// ========================================================
+// CheckBox Component
+// ========================================================
+export const CheckBox = ({ label, onChange, checked = false }) => {
+  const [isChecked, setIsChecked] = useState(checked);
 
-const formatArabic = (q: number, t: (key: string) => string): string => {
-  const juz = Math.floor(q / 8);
-  const hizb = Math.floor((q % 8) / 4);
-  const quarter = q % 4;
-  return [
-    juz &&
-    (juz === 1 ? t("juzOne") : `${toArabicNumerals(juz)} ${t("juz")}`),
-    hizb &&
-    (hizb === 1 ? t("hizbOne") : `${toArabicNumerals(hizb)} ${t("hizb")}`),
-    quarter &&
-    (quarter === 1
-      ? t("quarterOne")
-      : `${toArabicNumerals(quarter)} ${t("quarter")}`),
-  ]
-    .filter(Boolean)
-    .join(" و ");
+  const toggleCheckbox = () => {
+    setIsChecked(!isChecked);
+    if (onChange) {
+      onChange(!isChecked);
+    }
+  };
+
+  return (
+    <TouchableOpacity className="flex-row items-center py-1" onPress={toggleCheckbox}>
+      <View
+        className={`w-6 h-6  rounded-md border-2 mr-2 items-center justify-center ${
+          isChecked ? "bg-primary-800 border-primary-800" : "border-primary-800"
+        }`}
+      >
+        {isChecked && <MaterialIcons name="check" size={18} color="white" />}
+      </View>
+      <Text>{label}</Text>
+    </TouchableOpacity>
+  );
 };
 
