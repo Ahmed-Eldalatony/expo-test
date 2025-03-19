@@ -12,7 +12,11 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.ahmeddalton.expotest",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "UIBackgroundModes": ["fetch", "processing"],
+        "BGTaskSchedulerPermittedIdentifiers": [
+          "com.transistorsoft.fetch",
+          "com.transistorsoft.customtask"
+        ]
       }
     },
     "android": {
@@ -29,6 +33,7 @@
     },
     "plugins": [
       "expo-router",
+      "react-native-background-fetch",
       [
         "expo-splash-screen",
         {

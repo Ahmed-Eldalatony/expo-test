@@ -8,7 +8,7 @@
 - add a subtask with counter .
 
 deleting reminders shoudl remove it from the store
-
-
+tablet support on android
+https://expo.dev/changelog/2025-01-21-react-native-0.77
 # counter inspiration 
 https://codesandbox.io/p/sandbox/counter-framer-motion-315dy?file=%2Fsrc%2FCounter.js
