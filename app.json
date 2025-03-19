@@ -10,7 +10,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ahmeddalton.expotest"
+      "bundleIdentifier": "com.ahmeddalton.expotest",
+      "infoPlist": {
+        "UIBackgroundModes": ["fetch", "processing"],
+        "BGTaskSchedulerPermittedIdentifiers": [
+          "com.transistorsoft.fetch",
+          "com.transistorsoft.customtask"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +33,7 @@
     },
     "plugins": [
       "expo-router",
+      "react-native-background-fetch",
       [
         "expo-splash-screen",
         {
@@ -34,17 +42,18 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ],[
+      ],
+      [
         "expo-font",
         {
-        "fonts": ["node_modules/@expo-google-fonts/readex-pro/ReadexPro_400Regular.ttf", 
+          "fonts": [
+            "node_modules/@expo-google-fonts/readex-pro/ReadexPro_400Regular.ttf",
             "node_modules/@expo-google-fonts/readex-pro/ReadexPro_500Medium.ttf",
             "node_modules/@expo-google-fonts/readex-pro/ReadexPro_600SemiBold.ttf",
             "node_modules/@expo-google-fonts/readex-pro/ReadexPro_700Bold.ttf"
           ]
-
         }
-     ]
+      ]
     ],
     "experiments": {
       "typedRoutes": true
