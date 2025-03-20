@@ -1,20 +1,16 @@
-import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from 'adhan';
+import { PrayerTimes, Coordinates, CalculationMethod } from 'adhan';
+// import dayjs from 'dayjs';
 const coordinates = new Coordinates(30.5646, 30.9866); // Coordinates for El Munofia, Egypt
 const params = CalculationMethod.Egyptian();
-const date = new Date();
-const now = new Date();
 
-export const prayerTimes =()=> {
-return new PrayerTimes(coordinates, now, params);
-}
+export const getPrayerTimes = ( date = new Date()) => {
+  const prayerTimes = new PrayerTimes(coordinates, date, params);
 
-
-
-export const prayerNames: Prayer[] = [
-  "fajr",
-  "dhuhr",
-  "asr",
-  "maghrib",
-  "isha",
-];
-
+  return {
+    fajr: prayerTimes.fajr,
+    dhuhr: prayerTimes.dhuhr,
+    asr: prayerTimes.asr,
+    maghrib: prayerTimes.maghrib,
+    isha: prayerTimes.isha,
+  };
+};
