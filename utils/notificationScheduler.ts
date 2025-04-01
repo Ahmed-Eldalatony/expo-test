@@ -126,53 +126,53 @@ export const schedulePrayerNotifications = async (prayerTimes) => {
   //   return; // Don't schedule native notifications on web
   // }
   //
-  for (const [prayerName, time] of Object.entries(prayerTimes)) {
-    let triggerDate = dayjs(time);
-
-    if (beforeSalah) {
-      const triggerDateBefore = triggerDate.subtract(5, 'minutes');
-      if (triggerDateBefore.isAfter(dayjs())) {
-        const triggerBefore = {
-          type: TriggerType.TIMESTAMP,
-          timestamp: triggerDateBefore.valueOf(),
-          repeatFrequency: RepeatFrequency.DAILY,
-        };
-
-        await notifee.createTriggerNotification(
-          {
-            title: `Time for ${prayerName} (Before)`,
-            body: `Reminder: ${prayerName} prayer is in 5 minutes.`,
-            android: {
-              channelId: 'prayer-times',
-              smallIcon: 'ic_launcher', // Ensure this icon is in your resources
-            },
-          },
-          triggerBefore
-        );
-      }
-    }
-
-    if (afterSalah) {
-      const triggerDateAfter = triggerDate.add(5, 'minutes');
-      if (triggerDateAfter.isAfter(dayjs())) {
-        const triggerAfter = {
-          type: TriggerType.TIMESTAMP,
-          timestamp: triggerDateAfter.valueOf(),
-          repeatFrequency: RepeatFrequency.DAILY,
-        };
-
-        await notifee.createTriggerNotification(
-          {
-            title: `Time for ${prayerName} (After)`,
-            body: `Reminder: 5 minutes past ${prayerName} prayer time.`,
-            android: {
-              channelId: 'prayer-times',
-              smallIcon: 'ic_launcher', // Ensure this icon is in your resources
-            },
-          },
-          triggerAfter
-        );
-      }
-    }
-  }
+//   for (const [prayerName, time] of Object.entries(prayerTimes)) {
+//     let triggerDate = dayjs(time);
+//
+//     if (beforeSalah) {
+//       const triggerDateBefore = triggerDate.subtract(5, 'minutes');
+//       if (triggerDateBefore.isAfter(dayjs())) {
+//         const triggerBefore = {
+//           type: TriggerType.TIMESTAMP,
+//           timestamp: triggerDateBefore.valueOf(),
+//           repeatFrequency: RepeatFrequency.DAILY,
+//         };
+//
+//         await notifee.createTriggerNotification(
+//           {
+//             title: `Time for ${prayerName} (Before)`,
+//             body: `Reminder: ${prayerName} prayer is in 5 minutes.`,
+//             android: {
+//               channelId: 'prayer-times',
+//               smallIcon: 'ic_launcher', // Ensure this icon is in your resources
+//             },
+//           },
+//           triggerBefore
+//         );
+//       }
+//     }
+//
+//     if (afterSalah) {
+//       const triggerDateAfter = triggerDate.add(5, 'minutes');
+//       if (triggerDateAfter.isAfter(dayjs())) {
+//         const triggerAfter = {
+//           type: TriggerType.TIMESTAMP,
+//           timestamp: triggerDateAfter.valueOf(),
+//           repeatFrequency: RepeatFrequency.DAILY,
+//         };
+//
+//         await notifee.createTriggerNotification(
+//           {
+//             title: `Time for ${prayerName} (After)`,
+//             body: `Reminder: 5 minutes past ${prayerName} prayer time.`,
+//             android: {
+//               channelId: 'prayer-times',
+//               smallIcon: 'ic_launcher', // Ensure this icon is in your resources
+//             },
+//           },
+//           triggerAfter
+//         );
+//       }
+//     }
+//   }
 };

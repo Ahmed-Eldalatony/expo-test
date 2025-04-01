@@ -7,11 +7,12 @@ import {
 } from "@expo-google-fonts/readex-pro";
 import { Amiri_400Regular, Amiri_700Bold } from "@expo-google-fonts/amiri";
 import { Redirect, Stack } from "expo-router";
+import { Platform } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from 'expo-notifications';
 
 import { schedulePrayerNotifications } from '@/utils/notificationScheduler';
 import { getPrayerTimes } from '@/utils/adhan-times';
-
 
 import { useRouter } from 'expo-router';
 // import { StatusBar } from 'expo-status-bar';
@@ -21,6 +22,7 @@ import "react-native-reanimated";
 import "./global.css";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { storage } from "./storage";
+import { platform } from "os";
 
 // import registerBackgroundTask from "@/utils/notificationScheduler";
 SplashScreen.preventAutoHideAsync();
@@ -60,29 +62,59 @@ export default function RootLayout() {
     }
     setLoading(false);
   }, []);
-  console.log("loading", loading)
+  // useEffect(() => {
+  //   const setupNotifications = async () => {
+  //     const prayerTimes = getPrayerTimes();
+  //
+  //     console.log(prayerTimes)
+  //     const prayerTimesExample = {
+  //       asr: new Date("Tue Apr 01 2025 01:38:00 GMT+0200"),
+  //       dhuhr: new Date("Tue Apr 01 2025 12:01:00 GMT+0200"),
+  //       fajr: new Date("Tue Apr 01 2025 03:39:00 GMT+0200"),
+  //       isha: new Date("Tue Apr 01 2025 19:29:00 GMT+0200"),
+  //       maghrib: new Date("Tue Apr 01 2025 18:14:00 GMT+0200"),
+  //     };
+  //     await schedulePrayerNotifications(prayerTimesExample);
+  //   };
+  //
+  //   setupNotifications();
+  // }, []);
+  //
   useEffect(() => {
-    const setupNotifications = async () => {
-      const prayerTimes = getPrayerTimes();
+    const scheduleTestNotification = async () => {
+      const now = new Date();
+      const targetTime = new Date(now);
+      targetTime.setHours(16); // 3 PM
+      targetTime.setMinutes(6);
+      targetTime.setSeconds(0);
 
-      console.log(prayerTimes)
-      const prayerTimesExample = {
-        asr: new Date("Tue Apr 01 2025 01:38:00 GMT+0200"),
-        dhuhr: new Date("Tue Apr 01 2025 12:01:00 GMT+0200"),
-        fajr: new Date("Tue Apr 01 2025 03:39:00 GMT+0200"),
-        isha: new Date("Tue Apr 01 2025 19:29:00 GMT+0200"),
-        maghrib: new Date("Tue Apr 01 2025 18:14:00 GMT+0200"),
-      };
-      await schedulePrayerNotifications(prayerTimesExample);
+      if (targetTime <= now) {
+        targetTime.setDate(now.getDate() + 1); // Schedule for tomorrow if it's already past 3:49 PM
+      }
+
+      const trigger = targetTime;
+
+      if (Platform.OS === "web") {
+        return
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Test Notification",
+          body: "This is a test notification scheduled for 3:49 PM today.",
+        },
+        trigger,
+      });
     };
 
-    setupNotifications();
+    scheduleTestNotification();
   }, []);
 
 
   if (!loaded) {
     return null;
   }
+
 
   return (
     <>
