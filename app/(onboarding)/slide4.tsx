@@ -1,7 +1,5 @@
 import React from "react";
-// import { useState } from "react";
 import { View, Text, Image, TouchableOpacity, Dimensions } from "react-native";
-// import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "../../hooks/useTranslation";
 
 import { useRouter } from "expo-router";

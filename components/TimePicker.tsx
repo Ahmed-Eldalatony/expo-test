@@ -75,7 +75,7 @@ export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
         </View>
       </TouchableOpacity>
       <TimerPickerModal
-        initialValue={{ hours: 12, minutes: 56 }}
+        initialValue={{ hours: 1, minutes: 3 }}
         visible={showPicker}
         setIsVisible={setShowPicker}
         onConfirm={handleTimeConfirm}

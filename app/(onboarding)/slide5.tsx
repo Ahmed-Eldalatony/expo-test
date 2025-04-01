@@ -1,5 +1,5 @@
-import React  from "react";
-import { View, Text,  } from "react-native";
+import React from "react";
+import { View, Text, } from "react-native";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useRouter } from "expo-router";
 import { OnboardingButton } from "../../components/OnboardingButton";

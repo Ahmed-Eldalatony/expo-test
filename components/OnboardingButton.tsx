@@ -17,7 +17,7 @@ export const OnboardingButton: React.FC<OnboardingButtonProps> = ({ title, onPre
         start={{ x: 0, y: 1 }}
         colors={['#FFD27D', '#4BE1A0']}
         style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
-        className='font-readexpro-medium hover:opacity-85 py-2 px-4 rounded-lg'
+        className='font-readexpro-medium hover:opacity-85 py-2 px-4 rounded-md'
       >
         <Text className="font-readexpro-medium text-shadow text-white text-2xl font-bold" style={[{ writingDirection: 'rtl' }, textStyle]}>
           {title}

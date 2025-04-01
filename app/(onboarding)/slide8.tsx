@@ -10,7 +10,7 @@ import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from 'adhan';
 import { TimePicker } from "@/components/TimePicker";
 import { MMKV } from 'react-native-mmkv';
 import { formatArabic, toArabicNumerals } from "@/utils/formatArabic";
-import { getPrayerTimes, prayerNames } from "@/utils/adhan-times";
+import { getPrayerTimes } from "@/utils/adhan-times";
 import { scheduleNotification } from "@/utils/notificationScheduler";
 import dayjs from 'dayjs';
 

@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Text, View, ActivityIndicator, Button, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colorScheme, useColorScheme } from "nativewind";
+import { colorScheme } from "nativewind";
 import { storage } from '../storage';
 
 import { schedulePrayerNotifications } from '@/utils/notificationScheduler';
@@ -20,10 +20,14 @@ export default function Entry() {
     }
     setLoading(false);
   }, []);
-
+console.log("loading",loading)
   useEffect(() => {
     const setupNotifications = async () => {
       const prayerTimes = getPrayerTimes();
+      console.log("prayerTimes", prayerTimes);
+      // const prayerTimes = {
+      //   ""
+      // };
       await schedulePrayerNotifications(prayerTimes);
     };
 
@@ -44,7 +48,7 @@ export default function Entry() {
       {/* <ThemedText>Test Text</ThemedText> */}
       <TouchableOpacity className="dark:bg-primary-800 " onPress={(prev) => colorScheme.toggle()} >
         <Text className='dark:text-white'>
-          Toggle Theme
+          Toggleee Theme
         </Text>
         <Text onPress={() => router.push("/slide7")} className='dark:text-white'>
           go 7
