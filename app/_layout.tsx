@@ -10,7 +10,9 @@ import { Redirect, Stack } from "expo-router";
 import { Platform } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from 'expo-notifications';
+import { initializeNotifications } from "@/lib";
 
+import { SchedulableTriggerInputTypes } from "expo-notifications";
 import { schedulePrayerNotifications } from '@/utils/notificationScheduler';
 import { getPrayerTimes } from '@/utils/adhan-times';
 
@@ -24,10 +26,12 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { storage } from "./storage";
 import { platform } from "os";
 
+
 // import registerBackgroundTask from "@/utils/notificationScheduler";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  initializeNotifications()
   storage.delete("onboardingCompleted"); // Add this line for testing
   console.log("Checking onboarding status in _layout");
   const colorScheme = useColorScheme();
@@ -39,15 +43,13 @@ export default function RootLayout() {
     Amiri_400Regular,
     Amiri_700Bold,
   });
-  // useEffect(() => {
-  //   registerBackgroundTask();
-  // }, []);
+
+  const storedReminders = storage.getString('reminders');
+
   useEffect(() => {
     SplashScreen.preventAutoHideAsync();
-
     if (loaded) {
       SplashScreen.hideAsync();
-
       // registerBackgroundTask();
     }
   }, [loaded]);
@@ -66,13 +68,13 @@ export default function RootLayout() {
   //   const setupNotifications = async () => {
   //     const prayerTimes = getPrayerTimes();
   //
-  //     console.log(prayerTimes)
+  //     // console.log(prayerTimes)
   //     const prayerTimesExample = {
-  //       asr: new Date("Tue Apr 01 2025 01:38:00 GMT+0200"),
-  //       dhuhr: new Date("Tue Apr 01 2025 12:01:00 GMT+0200"),
-  //       fajr: new Date("Tue Apr 01 2025 03:39:00 GMT+0200"),
-  //       isha: new Date("Tue Apr 01 2025 19:29:00 GMT+0200"),
-  //       maghrib: new Date("Tue Apr 01 2025 18:14:00 GMT+0200"),
+  //       asr: new Date("Thu Apr 03 2025 01:38:00 GMT+0200"),
+  //       dhuhr: new Date("Thu Apr 03 2025 11:39:00 GMT+0200"),
+  //       fajr: new Date("Thu Apr 03 2025 03:39:00 GMT+0200"),
+  //       isha: new Date("Thu Apr 03 2025 19:29:00 GMT+0200"),
+  //       maghrib: new Date("Thu Apr 03 2025 18:14:00 GMT+0200"),
   //     };
   //     await schedulePrayerNotifications(prayerTimesExample);
   //   };
@@ -84,15 +86,19 @@ export default function RootLayout() {
     const scheduleTestNotification = async () => {
       const now = new Date();
       const targetTime = new Date(now);
-      targetTime.setHours(16); // 3 PM
-      targetTime.setMinutes(6);
-      targetTime.setSeconds(0);
-
-      if (targetTime <= now) {
-        targetTime.setDate(now.getDate() + 1); // Schedule for tomorrow if it's already past 3:49 PM
-      }
-
-      const trigger = targetTime;
+      const secondTarget = new Date(now);
+      // targetTime.setHours(12); // 3 PM
+      // targetTime.setMinutes(20);
+      secondTarget.setHours(3); // 3 PM
+      secondTarget.setMinutes(48)
+      console.log(targetTime)
+      //
+      // if (targetTime <= now) {
+      //   targetTime.setDate(now.getDate() + 1); // Schedule for tomorrow if it's already past 3:49 PM
+      //   console.log("hello")
+      // }
+      //
+      // const trigger = targetTime;
 
       if (Platform.OS === "web") {
         return
@@ -101,14 +107,45 @@ export default function RootLayout() {
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Test Notification",
-          body: "This is a test notification scheduled for 3:49 PM today.",
+          body: "A notification that should work after two minutes",
         },
-        trigger,
+        trigger: {
+          type: SchedulableTriggerInputTypes.CALENDAR,
+          seconds: 170,
+        },
+      });
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Test Notification",
+          body: "A notification by selected Time",
+        },
+        secondTarget,
+      });
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Test Notification",
+          body: "A notification by selected Time with a tigger",
+        },
+        trigger: {
+          type: SchedulableTriggerInputTypes.CALENDAR,
+          secondTarget,
+        }
       });
     };
 
     scheduleTestNotification();
   }, []);
+  // await notifee.createTriggerNotification(
+  //   {
+  //     title: `Time for ${prayerName} (Before)`,
+  //     body: `Reminder: ${prayerName} prayer is in 5 minutes.`,
+  //     android: {
+  //       channelId: 'prayer-times',
+  //       smallIcon: 'ic_launcher', // Ensure this icon is in your resources
+  //     },
+  //   },
+  //   triggerBefore
+  // );
 
 
   if (!loaded) {

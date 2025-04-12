@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 
 export const initializeNotifications = async () => {
+  console.log('initializeNotifications');
   await Notifications.requestPermissionsAsync();
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
