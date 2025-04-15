@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { colorScheme } from "nativewind";
 import { storage } from '../storage';
 
+import * as Notifications from 'expo-notifications';
 import { schedulePrayerNotifications } from '@/utils/notificationScheduler';
 import { getPrayerTimes } from '@/utils/adhan-times';
 
@@ -20,14 +21,12 @@ export default function Entry() {
     }
     setLoading(false);
   }, []);
-console.log("loading",loading)
+  console.log("loading", loading)
   useEffect(() => {
     const setupNotifications = async () => {
       const prayerTimes = getPrayerTimes();
       console.log("prayerTimes", prayerTimes);
-      // const prayerTimes = {
-      //   ""
-      // };
+
       await schedulePrayerNotifications(prayerTimes);
     };
 
@@ -41,17 +40,51 @@ console.log("loading",loading)
       </View>
     );
   }
+  const callNotification = async () => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Test Notification",
+        body: "A notification that should work after two minutes",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 2,
+      },
+    });
+  }
 
+  // const callNotification2 = async () => {
+  //   await Notifications.scheduleNotificationAsync({
+  //     content: {
+  //       title: "Test Notification",
+  //       body: "A notification that should work after two minutes",
+  //     },
+  //     trigger: {
+  //       type: Notifications.SchedulableTriggerInputTypes.DATE,
+  //       seconds: 2,
+  //     },
+  //   });
+  // }
   // Render your main app layout (e.g., Tabs) once loading is complete
+
+
+  async function isNotificationScheduledAt(targetDate) {
+    // Fetch all scheduled notifications
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  }
   return (
     <View className="flex-1 justify-center items-center bg-white dark:bg-primary-900">
-      {/* <ThemedText>Test Text</ThemedText> */}
       <TouchableOpacity className="dark:bg-primary-800 " onPress={(prev) => colorScheme.toggle()} >
         <Text className='dark:text-white'>
           Toggleee Theme
         </Text>
         <Text onPress={() => router.push("/slide7")} className='dark:text-white'>
           go 7
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={callNotification} >
+        <Text>
+          Send Notification
         </Text>
       </TouchableOpacity>
     </View>

@@ -38,6 +38,7 @@
     "قال الرسول ﷺ:",
     "يُقَالُ لِصَاحِبِ الْقُرْآنِ اقْرَأْ وَارْتَقِ وَرَتّلْ كَمَا كُنْتَ تُرَتّلُ في الدّنْيَا فإِنّ مَنْزِلَتكَ عِنْدَ آخِرِ آيةٍ تَقْرَؤُهَا."
   ],
+  "slide8.description2": "متي تريد ان يتم تذكيرك بوردك",
   "slide8.description1": "كم من جزء تستطيع أن تقرأ يوميا (يتسغرق الجزء حوالي 20 دقيقة)؟",
   "juzOne": "١ جزء",
   "juz": "جزء",
@@ -62,7 +63,11 @@
   "notificationScheduled": "تم تحديد الإشعار",
   "notificationScheduledFor": "تم تحديد الإشعار لـ",
   "addAlarm": "اضف معادا",
-  "slide8.description2": "متي تريد ان يتم تذكيرك بوردك",
   "addReminder": "اضف معادا",
-  "addAnotherReminder": "اضف معادا اخر"
+  "addAnotherReminder": "اضف معادا اخر",
+  "slide8.dependingOnSalah": "حسب  الصلاة",
+  "slide8.customTime": "بوقت مخصص",
+  "before": "قبل الصلاة",
+  "after": "بعد الصلاة",
+  "youCanChooseBoth": "*يمكنك اختيار كلاهما*"
 }

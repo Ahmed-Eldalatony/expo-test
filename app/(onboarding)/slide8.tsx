@@ -1,20 +1,23 @@
 import { useState, useCallback, useEffect } from "react";
 import { MaterialIcons } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity,Alert } from "react-native";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useRouter } from "expo-router";
 import { OnboardingButton } from "../../components/OnboardingButton";
+import { TextInput } from "react-native";
 
-import moment from "moment-timezone";
-import { Coordinates, CalculationMethod, PrayerTimes, Prayer } from 'adhan';
 import { TimePicker } from "@/components/TimePicker";
-import { MMKV } from 'react-native-mmkv';
 import { formatArabic, toArabicNumerals } from "@/utils/formatArabic";
-import { getPrayerTimes } from "@/utils/adhan-times";
-import { scheduleNotification } from "@/utils/notificationScheduler";
-import dayjs from 'dayjs';
-
-const storage = new MMKV();
+import {
+  getReadingMethod,
+  setReadingMethod,
+  storage, // Keep storage import if needed elsewhere, or remove if not
+  // Import updated storage functions (enabled ones removed)
+  getBeforeSalahReminder,
+  setBeforeSalahReminder,
+  getAfterSalahReminder,
+  setAfterSalahReminder,
+} from "../storage";
 
 type SelectionType = "quarter" | "hizb" | "juz" | null;
 
@@ -46,8 +49,7 @@ interface ReminderPromptProps {
   reminders: string[];
   addReminder: (reminder: string) => void;
   removeReminder: (index: number) => void;
-  onBeforeSalahSelected: (selected: boolean) => void;
-  onAfterSalahSelected: (selected: boolean) => void;
+  // onBeforeSalahSelected and onAfterSalahSelected removed as CheckBox manages its own state
 }
 
 // ========================================================
@@ -62,8 +64,7 @@ export default function OnboardingSlide() {
   const [selectionType, setSelectionType] = useState<SelectionType>(null);
   const [customSelection, setCustomSelection] = useState<number | null>(null);
   const [reminders, setReminders] = useState<string[]>([]);
-  const [beforeSalah, setBeforeSalah] = useState(false);
-  const [afterSalah, setAfterSalah] = useState(false);
+  // beforeSalah and afterSalah state removed
 
   useEffect(() => {
     const loadReminders = async () => {
@@ -90,11 +91,6 @@ export default function OnboardingSlide() {
       if (customSelection) {
         setStep(3);
       }
-    // } else if (step === 3) {
-    //   if (reminders.length > 0) {
-    //     await scheduleAllNotifications();
-    //     router.push("/slide9");
-    //   }
     }
   };
 
@@ -107,6 +103,10 @@ export default function OnboardingSlide() {
       router.push("/slide7");
     }
   };
+  useEffect(() => {
+    setReadingMethod(selectionType || "")
+  }, [selectionType])
+
 
   // Determine if the Next button should be disabled
   const isNextDisabled =
@@ -115,7 +115,7 @@ export default function OnboardingSlide() {
     (step === 3 && reminders.length === 0);
 
   return (
-    <View className="flex-1 bg-white px-4 gap-12 items-center justify-center">
+    <View className="flex-1 bg-white px-4 gap-8 items-center justify-center">
       <Text className="text-3xl mb-4 font-readexpro-semibold text-primary-800 text-center">
         {t("slide3.title")}
       </Text>
@@ -131,7 +131,9 @@ export default function OnboardingSlide() {
         </View>
       </View>
       <Text className="text-xl text-primary-900 font-readexpro-semibold">
-        {t("slide8.description1")}
+        {step === 1 && !selectionType &&
+          t("slide8.description1")
+        }
       </Text>
 
       {/* Render the current step */}
@@ -164,8 +166,7 @@ export default function OnboardingSlide() {
             setReminders(newReminders);
             storage.set('reminders', JSON.stringify(newReminders));
           }}
-          onBeforeSalahSelected={(selected) => setBeforeSalah(selected)}
-          onAfterSalahSelected={(selected) => setAfterSalah(selected)}
+        // onBeforeSalahSelected and onAfterSalahSelected props removed
         />
       )}
 
@@ -201,11 +202,11 @@ const SelectionPrompt: React.FC<SelectionPromptProps> = ({ selectionType, setSel
         {options.map((o) => (
           <TouchableOpacity
             key={o.type}
-            className={`px-4 py-2 rounded-md ${selectionType === o.type ? "bg-primary-200" : "bg-primary-100"
+            className={`px-4 py-2 rounded-md ${selectionType === o.type ? "bg-primary-800 " : "bg-primary-100"
               }`}
             onPress={() => setSelectionType(o.type)}
           >
-            <Text className="text-primary-800 font-readexpro-semibold">
+            <Text className={`text-primary-800 font-readexpro-semibold ${selectionType === o.type ? "text-white" : ""}`}>
               {o.label}
             </Text>
           </TouchableOpacity>
@@ -292,8 +293,8 @@ const ReminderPrompt: React.FC<ReminderPromptProps> = ({
   reminders,
   addReminder,
   removeReminder,
-  onBeforeSalahSelected,
-  onAfterSalahSelected,
+  // onBeforeSalahSelected, // Removed
+  // onAfterSalahSelected, // Removed
 }) => {
   const { t } = useTranslation();
   const handleTimeSelected = (time: string) => {
@@ -302,26 +303,31 @@ const ReminderPrompt: React.FC<ReminderPromptProps> = ({
 
   return (
     <View className="items-center">
-      <Text className="text-lg font-readexpro-semibold text-primary-900 mb-4">
+      <Text className="text-lg font-readexpro-semibold text-primary-800 mb-8">
         {t("slide8.description2")}
       </Text>
       <TabbedReminderSection
         reminders={reminders}
         addReminder={addReminder}
         removeReminder={removeReminder}
-        onBeforeSalahSelected={onBeforeSalahSelected}
-        onAfterSalahSelected={onAfterSalahSelected}
+      // onBeforeSalahSelected and onAfterSalahSelected props removed
       />
     </View>
   );
 };
 
-const TabbedReminderSection: React.FC<ReminderPromptProps> = ({
+// Adjust props interface for TabbedReminderSection if it's separate, or ensure ReminderPromptProps is used correctly
+interface TabbedReminderSectionProps {
+  reminders: string[];
+  addReminder: (reminder: string) => void;
+  removeReminder: (index: number) => void;
+  // onBeforeSalahSelected and onAfterSalahSelected removed
+}
+
+const TabbedReminderSection: React.FC<TabbedReminderSectionProps> = ({
   reminders,
   addReminder,
   removeReminder,
-  onBeforeSalahSelected,
-  onAfterSalahSelected,
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'salah' | 'custom'>('custom');
@@ -330,35 +336,35 @@ const TabbedReminderSection: React.FC<ReminderPromptProps> = ({
     <View className="items-center">
       <View className="flex-row  mb-4 space-x-4">
         <TouchableOpacity
-          className={`px-4 py-2 rounded-md ${activeTab === 'salah' ? 'bg-primary-200' : 'bg-primary-100'}`}
+          className={`px-4 py-2 rounded-md ${activeTab === 'salah' ? 'bg-primary-800 ' : ''}`}
           onPress={() => setActiveTab('salah')}
         >
-          <Text className="text-primary-800 font-readexpro-semibold">
-            {t("dependingOnSalah")}
+
+          <Text className={`text-primary-800 font-readexpro-semibold${activeTab === 'salah' ? ' text-white' : ''}`}>
+            {t("slide8.dependingOnSalah")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className={`px-4 py-2 rounded-md ${activeTab === 'custom' ? 'bg-primary-200' : 'bg-primary-100'}`}
+          className={`px-4 py-2 rounded-md ${activeTab === 'custom' ? 'bg-primary-800 ' : ''}`}
           onPress={() => setActiveTab('custom')}
         >
-          <Text className="text-primary-800 font-readexpro-semibold">
-            {t("customTime")}
+          <Text className={`text-primary-800 font-readexpro-semibold${activeTab === 'custom' ? ' text-white' : ''}`}>
+            {t("slide8.customTime")}
           </Text>
         </TouchableOpacity>
       </View>
 
       {activeTab === 'salah' && (
-        <View>
+        <View className="w-full">
           <CheckBox
             label={t("before")}
-            onChange={(selected) => onBeforeSalahSelected(selected)}
+            type="before" // Pass type prop
           />
           <CheckBox
             label={t("after")}
-            onChange={(selected) => onAfterSalahSelected(selected)}
+            type="after" // Pass type prop
           />
-
-          <Text className=" my-2 text-sm text-primary-900">{t("youCanChooseBoth")}</Text>
+          <Text className="my-4 text-sm text-primary-900 mx-auto">{t("youCanChooseBoth")}</Text>
         </View>
       )}
 
@@ -389,11 +395,10 @@ const CheckboxItem: React.FC<CheckboxItemProps> = ({ label }) => {
   return (
     <TouchableOpacity className="flex-row items-center py-1" onPress={() => setChecked(!checked)}>
       <View
-        className={`w-6 h-6 rounded-full border-2 mr-2 items-center justify-center ${
-          checked
-            ? 'bg-primary-500 border-primary-500'
-            : 'border-primary-300 dark:border-primary-200'
-        }`}
+        className={`w-6 h-6 rounded-full border-2 mr-2 items-center justify-center ${checked
+          ? 'bg-primary-500 border-primary-500'
+          : 'border-primary-300 dark:border-primary-200'
+          }`}
       >
         {checked && <Text className="text-white">✓</Text>}
       </View>
@@ -447,26 +452,85 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 // ========================================================
 // CheckBox Component
 // ========================================================
-export const CheckBox = ({ label, onChange, checked = false }) => {
-  const [isChecked, setIsChecked] = useState(checked);
+interface CheckBoxProps {
+  label: string;
+  type: 'before' | 'after';
+}
+
+export const CheckBox: React.FC<CheckBoxProps> = ({ label, type }) => {
+  const [isChecked, setIsChecked] = useState(false);
+  const [number, setNumber] = useState('10'); // Default visual state for the input when unchecked
+
+  // Determine which storage functions to use based on type
+  // Load initial state from storage
+  const getMinutesFunc = type === 'before' ? getBeforeSalahReminder : getAfterSalahReminder;
+  const setMinutesFunc = type === 'before' ? setBeforeSalahReminder : setAfterSalahReminder;
+  useEffect(() => {
+    const initialMinutes = getMinutesFunc();
+    const enabled = initialMinutes > 0;
+    setIsChecked(enabled);
+    // Set input visual: show stored minutes if enabled, otherwise show default '15'
+    setNumber(enabled ? String(initialMinutes) : '15');
+  }, [type, getMinutesFunc]); // Rerun if type changes (shouldn't happen often)
+
 
   const toggleCheckbox = () => {
-    setIsChecked(!isChecked);
-    if (onChange) {
-      onChange(!isChecked);
+    const newState = !isChecked;
+    setIsChecked(newState);
+
+    if (newState) {
+      // Enabling: Store the current number value (or default 15 if invalid/0)
+      const numValue = parseInt(number, 10);
+      const minutesToStore = !isNaN(numValue) && numValue > 0 ? numValue : 15;
+      setMinutesFunc(minutesToStore);
+      // Ensure input shows the stored value if it was default/invalid
+      setNumber(String(minutesToStore));
+    } else {
+      // Disabling: Store 0 and reset visual input to '15'
+      setMinutesFunc(0);
+      setNumber('10');
+    }
+  };
+
+  const handleNumberChange = (text: string) => {
+    const numericText = text.replace(/[^0-9]/g, '');
+    setNumber(numericText); // Update visual state immediately
+
+    // If the checkbox is currently checked, update the stored minutes
+    if (isChecked) {
+      const numValue = parseInt(numericText, 10);
+      // Only store if it's a valid positive number
+      if (!isNaN(numValue) && numValue > 0) {
+        setMinutesFunc(numValue);
+      } else {
+        // If input becomes invalid/zero while checked, store default 15
+        // (or alternatively, could store 0 and uncheck: setMinutesFunc(0); setIsChecked(false);)
+        setMinutesFunc(10);
+      }
     }
   };
 
   return (
-    <TouchableOpacity className="flex-row items-center py-1" onPress={toggleCheckbox}>
+    <TouchableOpacity className="flex-row ml-auto text-start gap-3 items-center py-1" onPress={toggleCheckbox}>
+      <TextInput
+        style={{ width: 40, borderWidth: 1, borderColor: '#895105', borderRadius: 5, textAlign: 'center', paddingVertical: 2 }}
+        value={number}
+        inputMode="numeric"
+        keyboardType="numeric"
+        onChangeText={handleNumberChange}
+        className="text-lg text-primary-900"
+        placeholder="min" // Add placeholder
+        maxLength={3} // Limit input length
+      />
+
+
+      <Text className=" text-lg text-primary-900">{label}  </Text>
       <View
-        className={`w-6 h-6  rounded-md border-2 mr-2 items-center justify-center ${
-          isChecked ? "bg-primary-800 border-primary-800" : "border-primary-800"
-        }`}
+        className={`w-6 h-6  rounded-md border-2 mr-2 items-center justify-center ${isChecked ? "bg-primary-800 border-primary-800" : "border-primary-800"
+          }`}
       >
         {isChecked && <MaterialIcons name="check" size={18} color="white" />}
       </View>
-      <Text>{label}</Text>
     </TouchableOpacity>
   );
 };
