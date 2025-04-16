@@ -68,18 +68,21 @@ export default function Entry() {
   // Render your main app layout (e.g., Tabs) once loading is complete
 
 
-  async function isNotificationScheduledAt(targetDate) {
-    // Fetch all scheduled notifications
-    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-  }
+  // async function isNotificationScheduledAt(targetDate) {
+  //   // Fetch all scheduled notifications
+  //   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  // }
   return (
     <View className="flex-1 justify-center items-center bg-white dark:bg-primary-900">
       <TouchableOpacity className="dark:bg-primary-800 " onPress={(prev) => colorScheme.toggle()} >
         <Text className='dark:text-white'>
           Toggleee Theme
         </Text>
-        <Text onPress={() => router.push("/slide7")} className='dark:text-white'>
+        <Text onPress={() => router.push("/slide9")} className='text-xl dark:text-white'>
           go 7
+        </Text>
+    <Text onPress={() => router.push("/slide8")} className='text-xl dark:text-white'>
+          go 8
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={callNotification} >

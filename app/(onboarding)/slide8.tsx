@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { MaterialIcons } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TouchableOpacity, Platform, StyleSheet, Alert } from "react-native";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useRouter } from "expo-router";
 import { OnboardingButton } from "../../components/OnboardingButton";
 import { TextInput } from "react-native";
+import { Picker } from '@react-native-picker/picker';
 
 import { TimePicker } from "@/components/TimePicker";
 import { formatArabic, toArabicNumerals } from "@/utils/formatArabic";
@@ -81,7 +82,10 @@ export default function OnboardingSlide() {
 
   }, []);
 
-  const handleNext = async () => {
+  const handleNext = () => {
+    if (Platform.OS !== "web") {
+      Alert.prompt("The next button work", "The next button work");
+    }
     if (step === 1) {
       if (selectionType) {
         setStep(2);
@@ -160,12 +164,11 @@ export default function OnboardingSlide() {
             storage.set('reminders', JSON.stringify(updatedReminders));
           }}
           removeReminder={(index: number) => {
-            const newReminders = [...reminders];
-            newReminders.splice(index, 1);
-            setReminders(newReminders);
-            storage.set('reminders', JSON.stringify(newReminders));
+            const updatedReminders = [...reminders];
+            updatedReminders.splice(index, 1);
+            setReminders(updatedReminders);
+            storage.set('reminders', JSON.stringify(updatedReminders));
           }}
-        // onBeforeSalahSelected and onAfterSalahSelected props removed
         />
       )}
 
@@ -176,7 +179,15 @@ export default function OnboardingSlide() {
           onPress={handleNext}
           disabled={isNextDisabled}
         />
+
+
       </View>
+      <TouchableOpacity
+        onPress={handleNext}
+        disabled={isNextDisabled}
+      >
+        <Text className="text-primary-800 text-2xl">Next</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -425,30 +436,69 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       <Text className="text-lg font-readexpro-semibold text-primary-900 mb-2">
         {label}
       </Text>
-      <View className="border rounded-md border-primary-200">
-        <select
-          className="bg-transparent text-primary-800 py-1 px-2 font-amiri-bold text-xl"
-          style={{ direction: "rtl" }}
-          value={selectedValue || ""}
-          onChange={(e) => onValueChange(Number(e.target.value))}
-        >
-          <option>{t("choose")}</option>
-          {options.map((option) => (
-            <option
-              key={option.value}
-              value={option.value}
-              className="font-amiri-bold"
-            >
-              {typeof formatOption === "function"
-                ? formatOption(option.value)
-                : option.label}
-            </option>
-          ))}
-        </select>
-      </View>
+      {Platform.OS === 'web' ? (
+        <View className="border rounded-md border-primary-200">
+          <select
+            className="bg-transparent text-primary-800 py-1 px-2 font-amiri-bold text-xl"
+            style={{ direction: "rtl" }}
+            value={selectedValue || ""}
+            onChange={(e) => onValueChange(Number(e.target.value))}
+          >
+            <option>{t("choose")}</option>
+            {options.map((option) => (
+              <option
+                key={option.value}
+                value={option.value}
+                className="font-amiri-bold"
+              >
+                {typeof formatOption === "function"
+                  ? formatOption(option.value)
+                  : option.label}
+              </option>
+            ))}
+          </select>
+        </View>
+      ) : (
+        <View style={styles.pickerContainer}>
+          <Picker
+            style={styles.picker}
+            selectedValue={selectedValue}
+            onValueChange={(itemValue) => {
+              if (itemValue) {
+                onValueChange(Number(itemValue));
+              }
+            }}
+            itemStyle={{ fontFamily: 'Amiri_400Regular', fontSize: 20 }}
+          >
+            <Picker.Item label={t("choose")} value={null} />
+            {options.map((option) => (
+              <Picker.Item
+                key={option.value}
+                label={typeof formatOption === "function" ? formatOption(option.value) : option.label}
+                value={option.value}
+              />
+            ))}
+          </Picker>
+        </View>
+      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  pickerContainer: {
+    borderWidth: 1,
+    borderRadius: 6,
+    borderColor: '#CBD5E0',
+    overflow: 'hidden',
+    width: 200, // Adjust as needed
+  },
+  picker: {
+    height: 40,
+    width: '100%',
+    color: '#374151',
+  },
+});
 
 // ========================================================
 // CheckBox Component
@@ -536,4 +586,6 @@ export const CheckBox: React.FC<CheckBoxProps> = ({ label, type, t }) => {
     </TouchableOpacity>
   );
 };
+
+const testfunc = () => { }
 
