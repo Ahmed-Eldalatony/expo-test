@@ -10,7 +10,7 @@ export default function OnboardingSlide(): JSX.Element {
   const router = useRouter();
 
   return (
-    <View className="flex-1 px-1 bg-white items-center justify-center">
+    <View className="flex-1 px-4 bg-white items-center justify-center">
       <Text className="text-3xl md:max-w-2xl mb-4 font-readexpro-semibold text-primary-800 text-center">
         {t("slide5.title")}
       </Text>
@@ -52,11 +52,14 @@ export default function OnboardingSlide(): JSX.Element {
           },
         ]}
       />
-      <OnboardingButton
-        style={{ marginTop: 30 }}
-        title={t("next")}
-        onPress={() => router.push("/slide6")}
-      />
+      <View className="flex-row justify-between w-full px-4 mt-4">
+        <OnboardingButton title={t("back")} onPress={() => router.push("/slide4")} />
+        <OnboardingButton
+          style={{ marginTop: 0 }}
+          title={t("next")}
+          onPress={() => router.push("/slide6")}
+        />
+      </View>
     </View>
   );
 }

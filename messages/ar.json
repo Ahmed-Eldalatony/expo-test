@@ -65,9 +65,10 @@
   "addAlarm": "اضف معادا",
   "addReminder": "اضف معادا",
   "addAnotherReminder": "اضف معادا اخر",
-  "slide8.dependingOnSalah": "حسب  الصلاة",
-  "slide8.customTime": "بوقت مخصص",
-  "before": "قبل الصلاة",
-  "after": "بعد الصلاة",
+  "slide8.dependingOnSalah": "وقت  الصلاة",
+  "slide8.customTime": "وقت مخصص",
+  "before": "قبل الصلاة ب",
+  "after": "بعد الصلاة ب",
+  "minutes": "دقائق",
   "youCanChooseBoth": "*يمكنك اختيار كلاهما*"
 }

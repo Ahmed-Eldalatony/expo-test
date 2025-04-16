@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, Image } from "react-native";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useRouter } from "expo-router";
+
 import { OnboardingButton } from "../../components/OnboardingButton";
 
 export default function OnboardingSlide() {
@@ -44,8 +45,10 @@ export default function OnboardingSlide() {
           </View>
         </View>
       </View>
-
-      <OnboardingButton title={t("next")} onPress={() => router.push("/slide4")} />
+      <View className="flex-row justify-between w-full px-4">
+        <OnboardingButton title={t("back")} onPress={() => router.push("/slide2")} />
+        <OnboardingButton title={t("next")} onPress={() => router.push("/slide4")} />
+      </View>
     </View>
   );
 }

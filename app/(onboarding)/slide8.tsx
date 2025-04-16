@@ -11,8 +11,7 @@ import { formatArabic, toArabicNumerals } from "@/utils/formatArabic";
 import {
   getReadingMethod,
   setReadingMethod,
-  storage, // Keep storage import if needed elsewhere, or remove if not
-  // Import updated storage functions (enabled ones removed)
+  storage,
   getBeforeSalahReminder,
   setBeforeSalahReminder,
   getAfterSalahReminder,
@@ -359,10 +358,12 @@ const TabbedReminderSection: React.FC<TabbedReminderSectionProps> = ({
           <CheckBox
             label={t("before")}
             type="before" // Pass type prop
+            t={t}
           />
           <CheckBox
             label={t("after")}
             type="after" // Pass type prop
+            t={t}
           />
           <Text className="my-4 text-sm text-primary-900 mx-auto">{t("youCanChooseBoth")}</Text>
         </View>
@@ -457,9 +458,10 @@ interface CheckBoxProps {
   type: 'before' | 'after';
 }
 
-export const CheckBox: React.FC<CheckBoxProps> = ({ label, type }) => {
+export const CheckBox: React.FC<CheckBoxProps> = ({ label, type, t }) => {
+  const minutes = 1
   const [isChecked, setIsChecked] = useState(false);
-  const [number, setNumber] = useState('10'); // Default visual state for the input when unchecked
+  const [number, setNumber] = useState(`${minutes}`);
 
   // Determine which storage functions to use based on type
   // Load initial state from storage
@@ -470,7 +472,7 @@ export const CheckBox: React.FC<CheckBoxProps> = ({ label, type }) => {
     const enabled = initialMinutes > 0;
     setIsChecked(enabled);
     // Set input visual: show stored minutes if enabled, otherwise show default '15'
-    setNumber(enabled ? String(initialMinutes) : '15');
+    setNumber(enabled ? String(initialMinutes) : `${minutes}`);
   }, [type, getMinutesFunc]); // Rerun if type changes (shouldn't happen often)
 
 
@@ -481,14 +483,14 @@ export const CheckBox: React.FC<CheckBoxProps> = ({ label, type }) => {
     if (newState) {
       // Enabling: Store the current number value (or default 15 if invalid/0)
       const numValue = parseInt(number, 10);
-      const minutesToStore = !isNaN(numValue) && numValue > 0 ? numValue : 15;
+      const minutesToStore = !isNaN(numValue) && numValue > 0 ? numValue : minutes;
       setMinutesFunc(minutesToStore);
       // Ensure input shows the stored value if it was default/invalid
       setNumber(String(minutesToStore));
     } else {
       // Disabling: Store 0 and reset visual input to '15'
       setMinutesFunc(0);
-      setNumber('10');
+      setNumber(`${minutes}`);
     }
   };
 
@@ -505,24 +507,24 @@ export const CheckBox: React.FC<CheckBoxProps> = ({ label, type }) => {
       } else {
         // If input becomes invalid/zero while checked, store default 15
         // (or alternatively, could store 0 and uncheck: setMinutesFunc(0); setIsChecked(false);)
-        setMinutesFunc(10);
+        setMinutesFunc(minutes);
       }
     }
   };
 
   return (
-    <TouchableOpacity className="flex-row ml-auto text-start gap-3 items-center py-1" onPress={toggleCheckbox}>
+    <TouchableOpacity className="flex-row ml-auto text-start gap-2 items-center py-1" onPress={toggleCheckbox}>
+      <Text className="ms-3  text-lg text-primary-900">{t("minutes")}</Text>
       <TextInput
-        style={{ width: 40, borderWidth: 1, borderColor: '#895105', borderRadius: 5, textAlign: 'center', paddingVertical: 2 }}
+        style={{ width: 40, height: 25 }}
         value={number}
         inputMode="numeric"
         keyboardType="numeric"
         onChangeText={handleNumberChange}
-        className="text-lg text-primary-900"
+        className="text-lg text-primary-900 -m-3 rounded-md border text-center  border-primary-800"
         placeholder="min" // Add placeholder
         maxLength={3} // Limit input length
       />
-
 
       <Text className=" text-lg text-primary-900">{label}  </Text>
       <View

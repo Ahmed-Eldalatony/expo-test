@@ -10,7 +10,7 @@ export default function OnboardingSlide() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 bg-white items-center justify-center">
+    <View className="flex-1 bg-white items-center justify-center px-4">
       <Text className="text-3xl md:max-w-2xl mb-4 font-readexpro-semibold text-primary-800 text-center">
         {t("slide7.title")}
       </Text>
@@ -26,7 +26,7 @@ export default function OnboardingSlide() {
         resizeMode="contain"
         resizeMethod="resize"
       />
-     <Image
+      <Image
         source={require("../../assets/images/Arrow.svg")}
         className="-mt-2"
         style={{ width: 25, height: 56 }}
@@ -54,7 +54,10 @@ export default function OnboardingSlide() {
           },
         ]}
       />
-      <OnboardingButton style={{ marginTop: 30 }} title={t("next")} onPress={() => router.push("/slide8")} />
+      <View className="flex-row justify-between w-full px-4 mt-4">
+        <OnboardingButton title={t("back")} onPress={() => router.push("/slide6")} />
+        <OnboardingButton style={{ marginTop: 0 }} title={t("next")} onPress={() => router.push("/slide8")} />
+      </View>
     </View>
   );
 }

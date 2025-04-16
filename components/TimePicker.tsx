@@ -3,10 +3,11 @@ import { Text, View, TouchableOpacity, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { TimerPickerModal } from "react-native-timer-picker";
 import { useTranslation } from "@/hooks/useTranslation";
-import { scheduleNotification } from "@/utils/notificationScheduler";
+// Import the new function and remove the old one if not used elsewhere
+import { scheduleCustomTimeNotification } from "@/utils/notificationScheduler";
 import { saveQuranReminderTime, getQuranReminderTime } from "@/app/storage";
 
-export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
+export const TimePicker = ({ onTimeSelected }) => { // Removed unused props visible, onClose
   const [showPicker, setShowPicker] = useState(false);
   const [alarmString, setAlarmString] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -48,14 +49,21 @@ export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
 
     // Save the chosen time to MMKV storage
     saveQuranReminderTime(formattedTime);
-    console.log("time now is", formattedTime)
-    // Schedule the notification (this handles both web and mobile)
-    scheduleNotification(formattedTime).then((notificationId) => {
-      if (notificationId === null) {
-        Alert.alert("Error scheduling notification");
+    console.log("Custom reminder time saved:", formattedTime)
+
+    // Schedule the notification using the new function
+    scheduleCustomTimeNotification(formattedTime).then((notificationId) => {
+      if (notificationId) {
+         console.log("Custom notification scheduled successfully with ID:", notificationId);
+         // Optionally provide user feedback
+         // Alert.alert("Reminder Set", `Daily reminder set for ${formattedTime}.`);
+      } else {
+         console.error("Failed to schedule custom notification.");
+         Alert.alert("Error", "Could not schedule the reminder notification.");
       }
     });
 
+    // Call the callback if provided (e.g., to update UI)
     if (onTimeSelected) {
       onTimeSelected(formattedTime);
     }
@@ -75,7 +83,7 @@ export const TimePicker = ({ visible, onClose, onTimeSelected }) => {
         </View>
       </TouchableOpacity>
       <TimerPickerModal
-        initialValue={{ hours: 1, minutes: 3 }}
+        initialValue={{ hours: 0, minutes: 12 }}
         visible={showPicker}
         setIsVisible={setShowPicker}
         onConfirm={handleTimeConfirm}

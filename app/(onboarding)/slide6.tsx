@@ -35,8 +35,10 @@ export default function OnboardingSlide() {
           </View>
         </View>
       </View>
-
-      <OnboardingButton title={t("next")} onPress={() => router.push("/slide7")} />
+      <View className="flex-row justify-between w-full px-4">
+        <OnboardingButton title={t("back")} onPress={() => router.push("/slide5")} />
+        <OnboardingButton title={t("next")} onPress={() => router.push("/slide7")} />
+      </View>
     </View>
   );
 }
