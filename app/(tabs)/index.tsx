@@ -78,10 +78,10 @@ export default function Entry() {
         <Text className='dark:text-white'>
           Toggleee Theme
         </Text>
-        <Text onPress={() => router.push("/slide9")} className='text-xl dark:text-white'>
+        <Text onPress={() => router.push("/slide9")} className='text-xl p-4 dark:text-white'>
           go 7
         </Text>
-    <Text onPress={() => router.push("/slide8")} className='text-xl dark:text-white'>
+    <Text onPress={() => router.push("/slide8")} className='text-xl p-4 dark:text-white'>
           go 8
         </Text>
       </TouchableOpacity>

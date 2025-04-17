@@ -9,7 +9,7 @@ export interface Reminder {
   id: string;
   timeString: string;       // e.g. "02:30"
   triggerSeconds: number;   // total seconds from now
-  notificationId: string;   // the id returned from scheduling the notification
+         notificationId: string;   // the id returned from scheduling the notification
 }
 
 export const getReminders = (): Reminder[] => {

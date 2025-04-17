@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, TouchableOpacity, Alert } from "react-native";
+import { Text, View, TouchableOpacity, Alert, Platform } from "react-native"; // Added Platform
 import { LinearGradient } from "expo-linear-gradient";
 import { TimerPickerModal } from "react-native-timer-picker";
 import { useTranslation } from "@/hooks/useTranslation";
-// Import the new function and remove the old one if not used elsewhere
 import { scheduleCustomTimeNotification } from "@/utils/notificationScheduler";
 import { saveQuranReminderTime, getQuranReminderTime } from "@/app/storage";
+import { Reminder } from "./addReminder"; // Import Reminder type
 
-export const TimePicker = ({ onTimeSelected }) => { // Removed unused props visible, onClose
+// Define the prop type for onTimeSelected
+interface TimePickerProps {
+  onTimeSelected: (reminder: Reminder) => void;
+}
+
+export const TimePicker: React.FC<TimePickerProps> = ({ onTimeSelected }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [alarmString, setAlarmString] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -42,30 +47,42 @@ export const TimePicker = ({ onTimeSelected }) => { // Removed unused props visi
     return timeParts.join(":");
   };
 
-  const handleTimeConfirm = (pickedDuration) => {
+  const handleTimeConfirm = async (pickedDuration) => { // Make async
     const formattedTime = formatTime(pickedDuration);
     setAlarmString(formattedTime);
     setShowPicker(false);
 
-    // Save the chosen time to MMKV storage
-    saveQuranReminderTime(formattedTime);
-    console.log("Custom reminder time saved:", formattedTime)
+    // Save the chosen time to MMKV storage (optional, as the full reminder list is saved in slide8)
+    // saveQuranReminderTime(formattedTime);
+    // console.log("Custom reminder time saved:", formattedTime)
 
     // Schedule the notification using the new function
-    scheduleCustomTimeNotification(formattedTime).then((notificationId) => {
-      if (notificationId) {
-         console.log("Custom notification scheduled successfully with ID:", notificationId);
-         // Optionally provide user feedback
-         // Alert.alert("Reminder Set", `Daily reminder set for ${formattedTime}.`);
-      } else {
-         console.error("Failed to schedule custom notification.");
-         Alert.alert("Error", "Could not schedule the reminder notification.");
-      }
-    });
+    const notificationId = await scheduleCustomTimeNotification(formattedTime);
 
-    // Call the callback if provided (e.g., to update UI)
-    if (onTimeSelected) {
-      onTimeSelected(formattedTime);
+    if (notificationId) {
+      console.log("Custom notification scheduled successfully with ID:", notificationId);
+
+      // Generate a unique ID for the reminder
+      const reminderId = Date.now().toString(); // Simple timestamp-based ID
+
+      // Create the Reminder object
+      const newReminder: Reminder = {
+        id: reminderId,
+        timeString: formattedTime,
+        notificationId: notificationId, // Store the actual ID
+        triggerSeconds: 0 // triggerSeconds might not be needed if using daily repeat
+      };
+
+      // Call the callback with the full Reminder object
+      if (onTimeSelected) {
+        onTimeSelected(newReminder);
+      }
+       // Optionally provide user feedback
+       // Alert.alert("Reminder Set", `Daily reminder set for ${formattedTime}.`);
+
+    } else {
+      console.error("Failed to schedule custom notification.");
+      Alert.alert("Error", "Could not schedule the reminder notification.");
     }
   };
 
@@ -83,7 +100,7 @@ export const TimePicker = ({ onTimeSelected }) => { // Removed unused props visi
         </View>
       </TouchableOpacity>
       <TimerPickerModal
-        initialValue={{ hours: 0, minutes: 12 }}
+        initialValue={{ hours: 3, minutes: 44 }}
         visible={showPicker}
         setIsVisible={setShowPicker}
         onConfirm={handleTimeConfirm}
@@ -110,4 +127,5 @@ export const TimePicker = ({ onTimeSelected }) => { // Removed unused props visi
     </View>
   );
 };
+
 
